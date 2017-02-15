@@ -1,7 +1,7 @@
 
 print("About to install the library")
 
-install.packages("academictorrents")
+install.packages("academictorrents", repos='http://cran.us.r-project.org')
 
 
 
