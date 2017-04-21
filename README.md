@@ -1,5 +1,6 @@
 # Academic Torrents Python and R APIs (Under Development)
 
+[![Build Status](https://travis-ci.org/AcademicTorrents/python-r-api.svg?branch=master)](https://travis-ci.org/AcademicTorrents/python-r-api)
 
 The idea of this API is to allow scripts to download datasets easily. The library should be available on every system and allow a simple interface to download small and large files.
 
