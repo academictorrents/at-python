@@ -12,6 +12,6 @@ python:
   - "3.7-dev" # 3.7 development branch
   - "nightly" # currently points to 3.7-dev
 # command to install dependencies
-install: mkae init
+install: make init
 # command to run tests
 script: make test
