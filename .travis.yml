@@ -19,8 +19,8 @@ install:
 
 # command to run tests
 script: 
-  - nosetest --with-coverage tests 
-  
+  - nosetests --with-coverage tests 
+
 # command to create coverage report
 before_install:
   pip install codecov
