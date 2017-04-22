@@ -1,1 +1,1 @@
-from .core import get
+from .academictorrents import get

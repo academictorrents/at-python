@@ -16,16 +16,17 @@ python:
   - 3.5
   - 3.6
 
+before_install:
+  pip install codecov
+
 # command to install dependencies
 install: 
   - make init
 
 # command to run tests
 script: 
-  - nosetests --with-coverage tests 
+  - make test
 
 # command to create coverage report
-before_install:
-  pip install codecov
 after_success:
   codecov
