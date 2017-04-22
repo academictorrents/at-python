@@ -1,32 +1,24 @@
 language: python
-
 matrix:
   allow_failures:
-    - os: osx
+  - os: osx
   include:
-    - os: linux
-      dist: trusty
-      sudo: required
-    - os: osx
-      osx_image: xcode7.2
-
+  - os: linux
+    dist: trusty
+    sudo: required
+  - os: osx
+    osx_image: xcode7.2
 python:
-  - 2.7
-  - 3.4
-  - 3.5
-  - 3.6
-
-before_install:
-  pip install codecov
-
-# command to install dependencies
-install: 
-  - make init
-
-# command to run tests
-script: 
-  - make test
-
-# command to create coverage report
-after_success:
-  codecov
+- 2.7
+- 3.4
+- 3.5
+- 3.6
+before_install: pip install codecov
+install:
+- make init
+script:
+- make test
+after_success: codecov
+notifications:
+  slack:
+    secure: Jd5B86m/WNMurqmAO96jN4mjlyAJYf7GIBuw6/47BNa6GljUa4of9haev5YIQpqeqRD4uThMgxCUF4EY2arFLqLp3RVLmFLDv7btla7mzxopyxBVOc1pPKw0gj/sK4JBowrm9nnn1HfY6JM7S8c9+pdGSaU/GJNPdfD+qDoZmUtM01K2yn1/CzzZV5pTMgMN1Im6wdNKrZqhLrLK7CqcabIzoz8OTNZZKvyqZvyUlqsY3CwFf2Pj/1xl17qNDxmTn4wi8ZI+fqUAVDkUgMD7/Rjo2Nm+/Er7p4bAqUegcAlrD0FfXmvd41jdW3euikATvJOgD/dwKV1kERdjFBkX9zxjOJWlJQ2uN9sBPEDhbr0vYNCx8XIx95rK+7lsUD8xOg84pCGa24iQLlveYMFfvu8RoqqiSpDt1JKQTjhiG72AbHHlyiKcpVxa9T3fa0n326SU00xlKax3jghZvo47H6h3kKjnyWzua3SLTlE1ynjqRbqUjsq4Tshh7zeAFzDMTnWLwK01WUULE/NcuAEMddL5aFrPwyjPE5LnjVrkJOll/X051sqji7JgoqmeZHvv296+8mM073PR6gCqhUKyyfrJpKkAFV+uvGWwqHRnLo9P//p490SI/xJJVpzQ8KIlYuYQW/r/yS//L0+6vhPZSWpO1uFGkkaXl2CdqpFT98I=
