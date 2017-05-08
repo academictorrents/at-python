@@ -1,5 +1,9 @@
 build: false
 
+image:
+  - Visual Studio 2013
+  - Visual Studio 2015
+
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
