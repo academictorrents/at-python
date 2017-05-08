@@ -28,7 +28,7 @@ init:
 install:
   - "%PYTHON%/Scripts/pip.exe install nose"
   - "%PYTHON%/Scripts/pip.exe install coverage"
-  - cmake init
+  - "C:\\cygwin\\bin\\make.exe" init
 
 test_script:
-  - cmake test
+  - "C:\\cygwin\\bin\\make.exe" test
