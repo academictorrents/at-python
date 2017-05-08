@@ -24,12 +24,12 @@ environment:
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
-  - cmd: set CYGWIN="C:\\cygwin\\bin"
+  - cmd: set MAKE="C:\\cygwin\\bin\\make.exe"
   
 install:
   - "%PYTHON%/Scripts/pip.exe install nose"
   - "%PYTHON%/Scripts/pip.exe install coverage"
-  - "%CYGWIN%/make.exe init"
+  - "%MAKE% init"
 
 test_script:
-  - "%CYGWIN%/make.exe test"
+  - "%MAKE% test"
