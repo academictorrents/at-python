@@ -29,7 +29,7 @@ init:
 install:
   - "%PYTHON%/Scripts/pip.exe install nose"
   - "%PYTHON%/Scripts/pip.exe install coverage"
-  - "%CYGWIN%/make.exe" init
+  - "%CYGWIN%/make.exe init"
 
 test_script:
-  - "%CYGWIN%/make.exe" test
+  - "%CYGWIN%/make.exe test"
