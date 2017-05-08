@@ -28,7 +28,7 @@ init:
 install:
   - "%PYTHON%/Scripts/pip.exe install nose"
   - "%PYTHON%/Scripts/pip.exe install coverage"
-  - nmake init
+  - cmake init
 
 test_script:
-  - nmake test
+  - cmake test
