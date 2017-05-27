@@ -9,7 +9,10 @@ class BasicTestSuite(unittest.TestCase):
         assert True
 
     def test_get_torrent(self):
-        self.assertEqual(academictorrents.get('fakeinfohash'), 'fakeinfohash')
+        
+        filename = academictorrents.get('d984f67af9917b214cd8b6048ab5624c7df6a07a') # test torrent
+        
+        self.assertEqual(filename, "test_folder") # just test if the folder name is correct
 
 if __name__ == '__main__':
     unittest.main()
