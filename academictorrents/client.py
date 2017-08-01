@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import time
 import random
 import socket
 import hashlib
@@ -8,39 +13,29 @@ from BitTornado.Network.RawServer import RawServer
 from BitTornado.Network.SocketHandler import UPnP_ERROR
 from BitTornado.Meta.bencode import bencode
 from BitTornado.Network.natpunch import UPnP_test
+from BitTornado.clock import clock
+from BitTornado import version
 from BitTornado.Application.ConfigDir import ConfigDir
+from BitTornado.Application.NumberFormats import formatIntText
 from BitTornado.Application.PeerID import createPeerID
 import urllib
 
-def error(errorMsg):
-    print(errorMsg)
+class ATClient(): 
+    def __init__(self):
+        self.torrent_path = None
 
-def finish():
-    print('Done')
-
-def display(self, dpflag=threading.Event(), fractionDone=None,
-            timeEst=None, downRate=None, upRate=None, activity=None,
-            statistics=None, **kws):
-    print('tick')
-
-def get(infohash):
-    download([infohash])
-    return infohash
-
-
-def download(params):
+def download(self, params):
     torrentFilePath = params[0] + '.torrent'
     urllib.urlretrieve('http://academictorrents.com/download/' + torrentFilePath, torrentFilePath)
     downloadTorrent([torrentFilePath])
 
-
-def downloadTorrent(params):
+def downloadTorrent(self, params):
     while 1:
         configdir = ConfigDir('downloadheadless')
         defaultsToIgnore = ['responsefile', 'url', 'priority']
         configdir.setDefaults(defaults, defaultsToIgnore)
         configdefaults = configdir.loadConfig()
-        defaults.append(
+        defaults.ppend(
             ('save_options', 0, 'whether to save the current options as the '
                 'new default configuration (only for btdownloadheadless.py)'))
         try:
@@ -64,7 +59,7 @@ def downloadTorrent(params):
             print (text)
         rawserver = RawServer(
             doneflag, config['timeout_check_interval'], config['timeout'],
-            ipv6_enable=config['ipv6_enabled'],
+            ipv6_enable=config['ipv6_enabled'], failfunc=h.failed,
             errorfunc=disp_exception)
         upnp_type = UPnP_test(config['upnp_nat_access'])
         while True:
@@ -80,16 +75,21 @@ def downloadTorrent(params):
                     upnp_type = 0
                     continue
                 print ("error: Couldn't listen - " + str(e))
+                h.failed()
                 return
 
-        response = get_response(config['responsefile'], config['url'], error)
+        response = get_response(config['responsefile'], config['url'], h.error)
         if not response:
             break
 
         infohash = hashlib.sha1(bencode(response['info'])).digest()
 
-        dow = BT1Download(display, finish, error, disp_exception, doneflag, config,
+        dow = BT1Download(
+            h.display, h.finished, h.error, disp_exception, doneflag, config,
             response, infohash, myid, rawserver, listen_port, configdir)
+
+        if not dow.saveAs(h.chooseFile, h.newpath):
+            break
 
         if not dow.initFiles(old_style=True):
             break
@@ -100,11 +100,33 @@ def downloadTorrent(params):
         dow.autoStats()
 
         if not dow.am_I_finished():
-            rawserver.listen_forever(dow.getPortHandler())
-            dow.shutdown()
+            h.display(activity='connecting to peers')
+        rawserver.listen_forever(dow.getPortHandler())
+        h.display(activity='shutting down')
+        dow.shutdown()
         break
     try:
         rawserver.shutdown()
     except Exception:
         pass
+    if not h.done:
+        h.failed()
+
+if __name__ == '__main__':
+        if sys.argv[1:] == ['--version']:
+            print (version)
+            sys.exit(0)
+
+        if PROFILER:
+            import profile
+            import pstats
+            p = profile.Profile()
+            p.runcall(run, sys.argv[1:])
+            log_fname = 'profile_data.' + time.strftime('%y%m%d%H%M%S') + '.txt'
+            with open(log_fname, 'a') as log:
+                normalstdout, sys.stdout = sys.stdout, log
+                pstats.Stats(p).strip_dirs().sort_stats('time').print_stats()
+                sys.stdout = normalstdout
+        else:
+            run(sys.argv[1:])
 

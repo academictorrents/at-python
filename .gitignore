@@ -89,5 +89,9 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# Random
+.idea
+*.torrent
+
 #Mac
 .DS_Store
