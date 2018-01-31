@@ -1,6 +1,5 @@
 import os
 import hashlib
-import logging
 
 from bittorrent.utils import ceil_div, create_and_open, mkdirs
 
@@ -24,6 +23,8 @@ class DiskStorage(object):
         self.block_size = block_size
         self.num_blocks = ceil_div(self.size, block_size)
         self.last_block_size = self.size % self.block_size
+
+        self.data_size = 0
 
         if self.last_block_size == 0:
             self.last_block_size = self.block_size
@@ -179,9 +180,9 @@ class DiskStorage(object):
         for file in self.files:
             file.handle.close()
             del file
-
-if __name__ == '__main__':
-    from torrent import Torrent
-
-    torrent = Torrent('ubuntu-13.04-desktop-amd64.iso.torrent')
-    f = PiecedFileSystem.from_torrent(torrent)
+#
+# if __name__ == '__main__':
+#     from torrent import Torrent
+#
+#     torrent = Torrent('ubuntu-13.04-desktop-amd64.iso.torrent')
+#     f = PiecedFileSystem.from_torrent(torrent)

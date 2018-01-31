@@ -162,6 +162,7 @@ class Client(object):
                 if self.server.storage.verify():
                     logging.info('We got the file!')
                     IOLoop.instance().stop()
+                    self.server.stop()
 
                 for piece in self.missing_pieces:
                     for start in range(0, self.server.storage.block_size, 2**14):
@@ -200,6 +201,7 @@ class Client(object):
         if not self.desired_pieces() and self.server.storage.verify():
             logging.info('We got the file!')
             IOLoop.instance().stop()
+            self.server.stop()
 
     def got_bitfield(self, message):
         truncated = {key: value for key, value in message.bitfield.items() if key < self.server.storage.num_blocks}
@@ -213,12 +215,12 @@ class Client(object):
 
     def got_piece(self, message):
         logging.debug('Piece info: %d, %d, %d', message.index, message.begin, len(message.block))
-        #self.peer.add_data_sample(len(message.block))
         self.server.storage.write_piece(message.index, message.begin, message.block)
 
         if self.server.storage.verify_block(message.index):
             logging.info('Got a complete block!')
             logging.critical(self.server.storage)
+
 
             self.stop_if_completed()
             self.server.announce_message(Have(message.index))
@@ -238,7 +240,11 @@ class Client(object):
 
     @gen_debuggable
     def desired_pieces(self):
-        want = [p for p in self.peer_blocks if not self.server.storage.blocks[p]]
+        want = []
+        for p in self.peer_blocks:
+            if not self.server.storage.blocks[p]:
+                want.append(p)
+
         logging.debug('I want %s', repr(want))
 
         return want

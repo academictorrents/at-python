@@ -92,6 +92,7 @@ ENV/
 # Random
 .idea
 *.torrent
+torrents_data/
 
 #Mac
 .DS_Store

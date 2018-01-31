@@ -23,8 +23,8 @@ class Torrent(object):
             self.meta = {}
 
         self.uploaded = 1000000
-        self.downloaded = 1000000
-        self.remaining = 10000000
+        self.downloaded = 0
+        self.remaining = self.calc_size()
 
         self.trackers = self._trackers()
 
@@ -54,6 +54,16 @@ class Torrent(object):
                     result.append(tracker)
 
         return result
+
+    def calc_size(self):
+        size = 0
+        if 'length' in self.meta['info']:
+            size = self.meta['info']['length']
+        else:
+            for info in self.meta['info']['files']:
+                size += info['length']
+
+        return size
 
     @property
     def tracker(self):
