@@ -21,7 +21,7 @@ class BasicTestSuite(unittest.TestCase):
     def test_get_torrent_to_datastore(self):
         
         academictorrents.set_datastore("/tmp/")
-        filename = academictorrents.get('d984f67af9917b214cd8b6048ab5624c7df6a07a') test torrent
+        filename = academictorrents.get('d984f67af9917b214cd8b6048ab5624c7df6a07a') # test torrent
         
         self.assertTrue(filename.startswith("/tmp/")) # make sure the data was stored where specified
 
