@@ -180,9 +180,4 @@ class DiskStorage(object):
         for file in self.files:
             file.handle.close()
             del file
-#
-# if __name__ == '__main__':
-#     from torrent import Torrent
-#
-#     torrent = Torrent('ubuntu-13.04-desktop-amd64.iso.torrent')
-#     f = PiecedFileSystem.from_torrent(torrent)
+
