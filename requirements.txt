@@ -1,3 +1,7 @@
-nose
-sphinx
-tornado
+bencode == 1.0
+bitstring == 3.1.5
+PyPubSub == 3.3.0
+requests == 2.7.0
+Run == 0.2
+pubsub == 0.1.1
+pytest == 3.6.0
