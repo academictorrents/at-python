@@ -73,16 +73,22 @@ class Runner(object):
                 print "Number of peers: ",len(self.peersManager.unchokedPeers)," Completed: ",float((float(b) / self.torrent.totalLength)*100),"%"
                 print self.peersManager.unchokedPeers[0].ip
                ##########################
-            time.sleep(0.1)
-            self.http_timeout -= .1
+            else:
+                time.sleep(0.1)
+                self.http_timeout -= .1
         print "No Peers Found -- Trying HTTP Backup"
 
-        urls_to_try = self.torrent.torrentFile.get('url-list', [])
-        if len(urls_to_try) > 0:
-            print "Downloading from backup URL: " + urls_to_try[0]
-            urllib.urlretrieve(urls_to_try[0], self.file_store + self.torrent.torrentFile.get('info', {}).get('name', ''))
-        else:
-            print "No Backup URL Present"
+        if self.http_timeout <= 0.0:
+            urls_to_try = self.torrent.torrentFile.get('url-list', [])
+            if len(urls_to_try) > 0:
+                print "Downloading from backup URL: " + urls_to_try[0]
+                if self.torrent.torrentFile.get('info', {}).get('files') is not None:
+                    for f in self.torrent.torrentFile.get('info', {}).get('files'):
+                        urllib.urlretrieve(urls_to_try[0], self.torrent.torrentFile.get('info', {}).get('name', '') + "/" + f['path'][0])
+                else:
+                    urllib.urlretrieve(urls_to_try[0], self.file_store + self.torrent.torrentFile.get('info', {}).get('name', ''))
+            else:
+                print "No Backup URL Present"
 
         # gotta kill the threads
         self.peerSeeker.requestStop()
