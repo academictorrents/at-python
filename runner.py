@@ -15,8 +15,6 @@ class Runner(object):
     def __init__(self, torrent_path, file_store):
         newpeersQueue = Queue.Queue()
         self.torrent = Torrent.Torrent(torrent_path, file_store)
-        #for filename in self.torrent.fileNames:
-        #     os.makedirs(filename['path'])
 
         self.tracker = Tracker.Tracker(self.torrent,newpeersQueue)
 

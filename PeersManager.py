@@ -61,11 +61,14 @@ class PeersManager(Thread):
                 peer = self.getPeerBySocket(socket)
                 try:
                     msg = socket.recv(1024)
-                except:
+                except Exception as e:
+                    print e
+                    print "removing peer: " + peer.ip
                     self.removePeer(peer)
                     continue
 
                 if len(msg) == 0:
+                    print "length of message received in peersmanager was 0 -- removing peer: " + peer.ip
                     self.removePeer(peer)
                     continue
 
@@ -79,7 +82,9 @@ class PeersManager(Thread):
                     peer.sendToPeer(peer.handshake)
                     interested = peer.build_interested()
                     peer.sendToPeer(interested)
-                except:
+                except Exception as e:
+                    print e
+                    print "removing peer: " + peer.ip
                     self.removePeer(peer)
 
     def addPeer(self, peer):
