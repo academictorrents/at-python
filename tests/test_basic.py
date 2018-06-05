@@ -14,6 +14,14 @@ class BasicTestSuite(unittest.TestCase):
     def test_absolute_truth_and_meaning(self):
         assert True
 
+    def test_get_file_http(self):
+        client = Client()
+        hash = '0332d23cc9909532b3b2c5ddcc3ac045f3f30ff4'
+        if os.path.isdir(client.get_torrent_dir(hash)):
+            shutil.rmtree(client.get_torrent_dir(hash))
+        filename = client.get_dataset(hash) # test torrent
+        self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
+
     def test_get_multiple_files(self):
         client = Client()
         hash = 'b79869ca12787166de88311ca1f28e3ebec12dec'
@@ -44,14 +52,6 @@ class BasicTestSuite(unittest.TestCase):
         assert client.datastore == os.getcwd() + '/datastore/alt/'
         filename = client.get_dataset(hash) # test torrent
         assert filename == os.getcwd() + '/datastore/alt/' + hash + '/mnist.pkl.gz'
-        self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
-
-    def test_get_file_http(self):
-        client = Client()
-        hash = '0332d23cc9909532b3b2c5ddcc3ac045f3f30ff4'
-        if os.path.isdir(client.get_torrent_dir(hash)):
-            shutil.rmtree(client.get_torrent_dir(hash))
-        filename = client.get_dataset(hash) # test torrent
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
 
 

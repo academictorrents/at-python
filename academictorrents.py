@@ -35,6 +35,5 @@ class Client(object):
         contents = bencode.bdecode(open(torrent_path, 'r').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):
-            # check if anyone has this package
             Runner(torrent_path, self.get_torrent_dir(name)).start()
         return self.get_torrent_dir(name) + contents['info']['name']

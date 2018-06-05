@@ -10,12 +10,15 @@ import Tracker
 import logging
 import Queue
 import os
+import urllib
+
 
 class Runner(object):
-    def __init__(self, torrent_path, file_store):
+    def __init__(self, torrent_path, file_store, http_timeout=10):
         newpeersQueue = Queue.Queue()
         self.torrent = Torrent.Torrent(torrent_path, file_store)
-
+        self.http_timeout = 10
+        self.file_store = file_store
         self.tracker = Tracker.Tracker(self.torrent,newpeersQueue)
 
         self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
@@ -33,10 +36,8 @@ class Runner(object):
 
     def start(self):
         old=0
-
-        while not self.piecesManager.arePiecesCompleted():
+        while not self.piecesManager.arePiecesCompleted() and self.http_timeout > 0.0:
             if len(self.peersManager.unchokedPeers) > 0:
-
                 for piece in self.piecesManager.pieces:
                     if not piece.finished:
                         pieceIndex = piece.pieceIndex
@@ -65,16 +66,23 @@ class Runner(object):
                         if self.piecesManager.pieces[i].blocks[j][0]=="Full":
                             b+=len(self.piecesManager.pieces[i].blocks[j][2])
 
-
                 if b == old:
                     continue
 
                 old = b
                 print "Number of peers: ",len(self.peersManager.unchokedPeers)," Completed: ",float((float(b) / self.torrent.totalLength)*100),"%"
-
+                print self.peersManager.unchokedPeers[0].ip
                ##########################
-
             time.sleep(0.1)
+            self.http_timeout -= .1
+        print "No Peers Found -- Trying HTTP Backup"
+
+        urls_to_try = self.torrent.torrentFile.get('url-list', [])
+        if len(urls_to_try) > 0:
+            print "Downloading from backup URL: " + urls_to_try[0]
+            urllib.urlretrieve(urls_to_try[0], self.file_store + self.torrent.torrentFile.get('info', {}).get('name', ''))
+        else:
+            print "No Backup URL Present"
 
         # gotta kill the threads
         self.peerSeeker.requestStop()
