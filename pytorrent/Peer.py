@@ -5,7 +5,7 @@ import struct
 import bitstring
 from bitstring import BitArray
 from pubsub import pub
-from libs import utils
+from . import utils
 import threading
 import logging
 

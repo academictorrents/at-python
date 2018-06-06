@@ -3,7 +3,7 @@ __author__ = 'alexisgallepe'
 import select
 import struct
 from threading import Thread
-from libs import utils
+from . import utils
 from pubsub import pub
 import RarestPieces
 import logging

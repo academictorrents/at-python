@@ -4,7 +4,7 @@ import time
 import bencode
 import logging
 import os
-from libs.utils import sha1_hash
+from . import utils
 
 
 class Torrent(object):
@@ -17,7 +17,7 @@ class Torrent(object):
         self.totalLength = 0
         self.pieceLength = self.torrentFile['info']['piece length']
         self.pieces = self.torrentFile['info']['pieces']
-        self.info_hash = sha1_hash(str(
+        self.info_hash = utils.sha1_hash(str(
             bencode.bencode(self.torrentFile['info'])
         ))
         self.peer_id = self.generatePeerId()
@@ -64,4 +64,4 @@ class Torrent(object):
 
     def generatePeerId(self):
         seed = str(time.time())
-        return sha1_hash(seed)
+        return utils.sha1_hash(seed)
