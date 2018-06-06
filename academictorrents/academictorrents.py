@@ -1,12 +1,12 @@
 import time
-import PeersManager
-import PeerSeeker
-import PiecesManager
-import Torrent
-import Tracker
+#import PeersManager
+#import PeerSeeker
+#import PiecesManager
+#import Torrent
+#import Tracker
 import logging
-import Queue
-from runner import Runner
+#import Queue
+from pytorrent import Client
 import logging
 import json
 import io
@@ -31,7 +31,17 @@ import bencode
 
 # graph conv presentation --> needs prior information, where does this prior come from?
 
-class Client(object):
+at_client = None
+def get_client():
+    global at_client
+    if at_client is None:
+        at_client = ATClient()
+    return at_client
+
+def get(hash):
+    return get_client().get_dataset(hash)
+
+class ATClient(object):
     def __init__(self):
         self.datastore = os.getcwd() + "/datastore/"
 
@@ -51,5 +61,5 @@ class Client(object):
         contents = bencode.bdecode(open(torrent_path, 'r').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):
-            Runner(torrent_path, self.get_torrent_dir(name)).start()
+            Client.Client(torrent_path, self.get_torrent_dir(name)).start()
         return self.get_torrent_dir(name) + contents['info']['name']

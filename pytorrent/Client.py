@@ -13,7 +13,7 @@ import os
 import urllib
 
 
-class Runner(object):
+class Client(object):
     def __init__(self, torrent_path, file_store, http_timeout=10):
         newpeersQueue = Queue.Queue()
         self.torrent = Torrent.Torrent(torrent_path, file_store)
