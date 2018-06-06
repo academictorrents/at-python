@@ -13,12 +13,12 @@ class Torrent(object):
         with open(path, 'r') as file:
             contents = file.read()
 
-        self.torrentFile = better_bencode.dumps(contents)
+        self.torrentFile = better_bencode.loads(contents)
         self.totalLength = 0
         self.pieceLength = self.torrentFile['info']['piece length']
         self.pieces = self.torrentFile['info']['pieces']
         self.info_hash = utils.sha1_hash(str(
-            better_bencode.dumps(self.torrentFile['info'])
+            better_bencode.loads(self.torrentFile['info'])
         ))
         self.peer_id = self.generatePeerId()
         self.announceList = self.getTrakers()

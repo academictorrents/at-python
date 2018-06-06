@@ -50,7 +50,7 @@ class Tracker(object):
         }
         try:
             answerTracker = requests.get(tracker, params=params, timeout=3)
-            lstPeers = better_bencode.dumps(answerTracker.text)
+            lstPeers = better_bencode.loads(answerTracker.text)
             self.parseTrackerResponse(lstPeers['peers'])
         except:
             pass

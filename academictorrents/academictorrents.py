@@ -58,7 +58,7 @@ class ATClient(object):
         open(torrent_path, 'wb').write(response.content)
 
         #result = urllib.urlretrieve(url, torrent_path)
-        contents = better_bencode.dumps(open(torrent_path, 'r').read())
+        contents = better_bencode.loads(open(torrent_path, 'r').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):
             Client.Client(torrent_path, self.get_torrent_dir(name)).start()
