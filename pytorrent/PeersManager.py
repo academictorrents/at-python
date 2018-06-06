@@ -150,7 +150,7 @@ class PeersManager(Thread):
 
             try:
                 peer.idFunction[msgCode](payload)
-            except Exception, e:
+            except Exception as e:
                 logging.debug("error id:", msgCode, " ->", e)
                 return
 
