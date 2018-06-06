@@ -1,11 +1,5 @@
 import time
-#import PeersManager
-#import PeerSeeker
-#import PiecesManager
-#import Torrent
-#import Tracker
 import logging
-#import Queue
 from pytorrent import Client
 import logging
 import json

@@ -45,7 +45,7 @@ class BasicTestSuite(unittest.TestCase):
         hash = '323a0048d87ca79b68f12a6350a57776b6a3b7fb'
         at.get_client().set_datastore(os.getcwd() + '/datastore/alt/')
         assert at.get_client().datastore == os.getcwd() + '/datastore/alt/'
-        filename = at.get_client().get(hash) # test torrent
+        filename = at.get(hash) # test torrent
         assert filename == os.getcwd() + '/datastore/alt/' + hash + '/mnist.pkl.gz'
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
 
