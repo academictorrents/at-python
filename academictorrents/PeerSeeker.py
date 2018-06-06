@@ -27,5 +27,5 @@ class PeerSeeker(Thread):
                 if not p.connectToPeer(3):
                     self.peerFailed.append((peer[0], peer[1]))
                 else:
-                    print "add new peer: " + p.ip
+                    print("add new peer: " + p.ip)
                     pub.sendMessage('PeersManager.newPeer', peer=p)

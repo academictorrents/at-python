@@ -5,6 +5,8 @@
 
 The idea of this API is to allow scripts to download datasets easily. The library should be available on every system and allow a simple interface to download small and large files.
 
+We are currently out on test.pypi! Install AT with this command:
+```pip install --index-url https://test.pypi.org/simple/ academictorrents```
 
 
 ```

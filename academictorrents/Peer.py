@@ -139,12 +139,12 @@ class Peer(object):
 
     def choke(self,payload=None):
         logging.info('choke')
-        print "choking peer: " + self.ip
+        print("choking peer: " + self.ip)
         self.state['peer_choking'] = True
 
     def unchoke(self,payload=None):
         logging.info('unchoke')
-        print "Unchoking peer: " + self.ip
+        print("Unchoking peer: " + self.ip)
         pub.sendMessage('PeersManager.peerUnchoked',peer=self)
         self.state['peer_choking'] = False
 

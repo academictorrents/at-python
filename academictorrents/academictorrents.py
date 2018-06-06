@@ -14,6 +14,22 @@ import urllib
 import os
 import bencode
 
+# delete one file, check if it downloads that one file
+
+#def get(): # instantiate the client object
+
+# make the torrent client its own module
+
+# hit some endpoint on the academic torrent server with the size of the file and if it was from HTTP or peers. Maybe average speed todo
+
+# Be able to pass in a url that lets you download on HTTP a torrent file
+# Or, a path to a torrent file
+
+# put this in the github: $ pip install --index-url https://test.pypi.org/simple/ your-package
+
+# Python 3 compatibility
+
+# graph conv presentation --> needs prior information, where does this prior come from?
 
 class Client(object):
     def __init__(self):
