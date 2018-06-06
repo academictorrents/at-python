@@ -4,9 +4,10 @@ from pytorrent import Client
 import logging
 import json
 import io
-import urllib
+#import urllib
 import os
 import bencode
+import requests
 
 # delete one file, check if it downloads that one file
 
@@ -54,7 +55,7 @@ class ATClient(object):
             os.makedirs(self.get_torrent_dir(name))
 
         response = requests.get(url, stream=True)
-        open(torrent_path, 'wb').write(r.content)
+        open(torrent_path, 'wb').write(response.content)
 
         #result = urllib.urlretrieve(url, torrent_path)
         contents = bencode.bdecode(open(torrent_path, 'r').read())

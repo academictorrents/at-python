@@ -10,7 +10,7 @@ from . import Tracker
 import logging
 import Queue
 import os
-import urllib
+import requests
 
 
 class Client(object):
