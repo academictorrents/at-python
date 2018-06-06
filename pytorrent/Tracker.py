@@ -1,6 +1,6 @@
 __author__ = 'alexisgallepe'
 
-import bencode
+import bencoder
 import requests
 import logging
 import struct, random, socket
@@ -50,7 +50,7 @@ class Tracker(object):
         }
         try:
             answerTracker = requests.get(tracker, params=params, timeout=3)
-            lstPeers = bencode.decode(answerTracker.text)
+            lstPeers = bencoder.decode(answerTracker.text)
             self.parseTrackerResponse(lstPeers['peers'])
         except:
             pass
