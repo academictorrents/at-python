@@ -3,9 +3,9 @@ __author__ = 'alexisgallepe'
 import bencode
 import requests
 import logging
-import struct,random,socket
+import struct, random, socket
 from urlparse import urlparse
-import threading,time
+import threading, time
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):

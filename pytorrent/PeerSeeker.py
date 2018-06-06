@@ -1,7 +1,7 @@
 __author__ = 'alexisgallepe'
 
 import time
-import Peer
+from . import Peer
 from threading import Thread
 from pubsub import pub
 

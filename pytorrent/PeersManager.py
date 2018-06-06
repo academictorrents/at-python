@@ -5,7 +5,7 @@ import struct
 from threading import Thread
 from . import utils
 from pubsub import pub
-import RarestPieces
+from . import RarestPieces
 import logging
 
 
