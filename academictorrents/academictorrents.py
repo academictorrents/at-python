@@ -14,6 +14,8 @@ import bencode
 
 # make the torrent client its own module
 
+# Iterate over urls to try randomly and download
+
 # hit some endpoint on the academic torrent server with the size of the file and if it was from HTTP or peers. Maybe average speed todo
 
 # Be able to pass in a url that lets you download on HTTP a torrent file
@@ -51,7 +53,10 @@ class ATClient(object):
         if not os.path.isdir(self.get_torrent_dir(name)):
             os.makedirs(self.get_torrent_dir(name))
 
-        result = urllib.urlretrieve(url, torrent_path)
+        response = requests.get(url, stream=True)
+        open(torrent_path, 'wb').write(r.content)
+
+        #result = urllib.urlretrieve(url, torrent_path)
         contents = bencode.bdecode(open(torrent_path, 'r').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):
