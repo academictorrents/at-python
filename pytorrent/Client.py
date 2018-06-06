@@ -8,7 +8,7 @@ from . import PiecesManager
 from . import Torrent
 from . import Tracker
 import logging
-from . import Queue
+import Queue
 import os
 import urllib
 
