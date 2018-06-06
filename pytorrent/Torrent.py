@@ -1,7 +1,7 @@
 __author__ = 'alexisgallepe'
 
 import time
-import better_bencode
+import bencode
 import logging
 import os
 from . import utils
@@ -13,12 +13,12 @@ class Torrent(object):
         with open(path, 'r') as file:
             contents = file.read()
 
-        self.torrentFile = better_bencode.loads(contents)
+        self.torrentFile = bencode.decode(contents)
         self.totalLength = 0
         self.pieceLength = self.torrentFile['info']['piece length']
         self.pieces = self.torrentFile['info']['pieces']
         self.info_hash = utils.sha1_hash(str(
-            better_bencode.loads(self.torrentFile['info'])
+            bencode.decode(self.torrentFile['info'])
         ))
         self.peer_id = self.generatePeerId()
         self.announceList = self.getTrakers()
