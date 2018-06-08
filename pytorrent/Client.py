@@ -8,14 +8,14 @@ from . import PiecesManager
 from . import Torrent
 from . import Tracker
 import logging
-import Queue
+from queue import Queue
 import os
 import requests
 
 
 class Client(object):
     def __init__(self, torrent_path, file_store, http_timeout=10):
-        newpeersQueue = Queue.Queue()
+        newpeersQueue = Queue()
         self.torrent = Torrent.Torrent(torrent_path, file_store)
         self.http_timeout = 10
         self.file_store = file_store
