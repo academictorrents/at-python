@@ -10,7 +10,7 @@ from . import utils
 class Torrent(object):
     def __init__(self, path, file_store):
         self.file_store = file_store
-        with open(path, 'r') as file:
+        with open(path, 'rb') as file:
             contents = file.read()
 
         self.torrentFile = bencode.decode(contents)
@@ -18,9 +18,7 @@ class Torrent(object):
         self.pieceLength = self.torrentFile['info']['piece length']
         self.pieces = self.torrentFile['info']['pieces']
 
-        self.info_hash = utils.sha1_hash(str(
-            bencode.encode(self.torrentFile['info'])
-        ))
+        self.info_hash = utils.sha1_hash(bencode.encode(self.torrentFile['info']))
         self.peer_id = self.generatePeerId()
         self.announceList = self.getTrakers()
         self.fileNames = []
@@ -65,4 +63,4 @@ class Torrent(object):
 
     def generatePeerId(self):
         seed = str(time.time())
-        return utils.sha1_hash(seed)
+        return utils.sha1_hash(seed.encode())

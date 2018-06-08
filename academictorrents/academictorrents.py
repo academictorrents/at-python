@@ -8,9 +8,13 @@ import os
 import bencode
 import requests
 try:
-    from urllib.request import urlretrieve
+    from urllib.parse import urlparse, urlencode
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
 except ImportError:
-    from urllib import urlretrieve
+    from urlparse import urlparse
+    from urllib import urlencode
+    from urllib2 import urlopen, Request, HTTPError
 
 
 # delete one file, check if it downloads that one file
@@ -58,8 +62,9 @@ class ATClient(object):
         if not os.path.isdir(self.get_torrent_dir(name)):
             os.makedirs(self.get_torrent_dir(name))
 
-        response = urlretrieve(url, torrent_path)
-        contents = bencode.decode(open(torrent_path, 'r').read())
+        response = urlopen(url).read()
+        open(torrent_path, 'wb').write(response)
+        contents = bencode.decode(open(torrent_path, 'rb').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):
             Client.Client(torrent_path, self.get_torrent_dir(name)).start()
