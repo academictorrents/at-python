@@ -3,7 +3,6 @@ import unittest
 import os
 import shutil
 import os
-import cPickle, gzip
 import sys, os, time
 import numpy as np
 
@@ -49,13 +48,6 @@ class BasicTestSuite(unittest.TestCase):
         assert filename == os.getcwd() + '/datastore/alt/' + hash + '/mnist.pkl.gz'
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
 
-
-#print("About to open the file")
-
-
-#mnist = gzip.open(filename, 'rb')
-#train_set, validation_set, test_set = cPickle.load(mnist)
-#mnist.close()
 
 if __name__ == '__main__':
     unittest.main()
