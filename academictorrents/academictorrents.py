@@ -59,7 +59,6 @@ class ATClient(object):
             os.makedirs(self.get_torrent_dir(name))
 
         response = urlretrieve(url, torrent_path)
-        import pdb; pdb.set_trace()
         contents = bencode.decode(open(torrent_path, 'r').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):

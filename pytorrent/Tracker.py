@@ -4,7 +4,11 @@ import bencode
 import requests
 import logging
 import struct, random, socket
-from urlparse import urlparse
+# Python 2 and 3: alternative 4
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 import threading, time
 
 class FuncThread(threading.Thread):
