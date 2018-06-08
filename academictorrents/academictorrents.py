@@ -4,10 +4,15 @@ from pytorrent import Client
 import logging
 import json
 import io
-#import urllib
 import os
-import bencoder
+import bencode
 import requests
+from builtins import bytes
+try:
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib import urlretrieve
+
 
 # delete one file, check if it downloads that one file
 
@@ -54,11 +59,9 @@ class ATClient(object):
         if not os.path.isdir(self.get_torrent_dir(name)):
             os.makedirs(self.get_torrent_dir(name))
 
-        response = requests.get(url, stream=True)
-        open(torrent_path, 'wb').write(response.content)
-
-        #result = urllib.urlretrieve(url, torrent_path)
-        contents = bencoder.decode(open(torrent_path, 'r').read())
+        response = urlretrieve(url, torrent_path)
+        import pdb; pdb.set_trace()
+        contents = bencode.decode(open(torrent_path, 'r').read())
 
         if not os.path.isfile(self.get_torrent_dir(name) + contents['info']['name']):
             Client.Client(torrent_path, self.get_torrent_dir(name)).start()

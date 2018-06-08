@@ -1,7 +1,7 @@
 __author__ = 'alexisgallepe'
 
 import time
-import bencoder
+import bencode
 import logging
 import os
 from . import utils
@@ -13,12 +13,13 @@ class Torrent(object):
         with open(path, 'r') as file:
             contents = file.read()
 
-        self.torrentFile = bencoder.decode(contents)
+        self.torrentFile = bencode.decode(contents)
         self.totalLength = 0
         self.pieceLength = self.torrentFile['info']['piece length']
         self.pieces = self.torrentFile['info']['pieces']
+
         self.info_hash = utils.sha1_hash(str(
-            bencoder.decode(self.torrentFile['info'])
+            bencode.encode(self.torrentFile['info'])
         ))
         self.peer_id = self.generatePeerId()
         self.announceList = self.getTrakers()
@@ -41,7 +42,7 @@ class Torrent(object):
         root = self.file_store + self.torrentFile['info']['name'] #+ "/"
         if 'files' in self.torrentFile['info']:
             if not os.path.exists(root):
-                os.mkdir(root, 0o766 )
+                os.mkdir(root, 0o766)
 
             for f in self.torrentFile['info']['files']:
                 pathFile = os.path.join(root, *f["path"])
