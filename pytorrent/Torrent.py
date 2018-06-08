@@ -24,11 +24,10 @@ class Torrent(object):
         self.fileNames = []
 
         self.getFiles()
-
         if self.totalLength % self.pieceLength == 0:
             self.numberOfPieces = self.totalLength / self.pieceLength
         else:
-            self.numberOfPieces = (self.totalLength / self.pieceLength) + 1
+            self.numberOfPieces = int(self.totalLength / self.pieceLength) + 1
 
         logging.debug(self.announceList)
         logging.debug(self.fileNames)

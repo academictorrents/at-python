@@ -13,10 +13,8 @@ class PiecesManager(Thread):
         self.piecesCompleted = False
 
         self.numberOfPieces = torrent.numberOfPieces
-
         self.bitfield = bitstring.BitArray(self.numberOfPieces)
         self.pieces = self.generatePieces()
-
         self.files = self.getFiles()
 
         for file in self.files:
@@ -68,8 +66,8 @@ class PiecesManager(Thread):
             currentSizeFile = f["length"]
             fileOffset = 0
 
-            while  currentSizeFile > 0:
-                idPiece = pieceOffset / self.torrent.pieceLength
+            while currentSizeFile > 0:
+                idPiece = int(pieceOffset / self.torrent.pieceLength)
                 pieceSize = self.pieces[idPiece].pieceSize - pieceSizeUsed
 
                 if currentSizeFile - pieceSize < 0:
