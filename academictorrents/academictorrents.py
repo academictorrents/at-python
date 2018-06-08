@@ -7,7 +7,6 @@ import io
 import os
 import bencode
 import requests
-from builtins import bytes
 try:
     from urllib.request import urlretrieve
 except ImportError:
