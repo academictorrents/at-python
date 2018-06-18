@@ -25,6 +25,15 @@ class PiecesManager(Thread):
         pub.subscribe(self.receiveBlockPiece, 'PiecesManager.Piece')
         pub.subscribe(self.updateBitfield, 'PiecesManager.PieceCompleted')
 
+
+    def checkDiskPieces(self):
+        for piece in self.pieces:
+            piece.isCompleteOnDisk() # this should set all the finished bools on the finished pieces
+
+    def checkDownloadedPieces(self):
+        for piece in self.pieces:
+            piece.isComplete()
+
     def updateBitfield(self,pieceIndex):
         self.bitfield[pieceIndex] = 1
 
@@ -35,7 +44,6 @@ class PiecesManager(Thread):
 
     def generatePieces(self):
         pieces = []
-
         for i in range(self.numberOfPieces):
             start = i * 20
             end = start + 20
@@ -48,6 +56,7 @@ class PiecesManager(Thread):
         return pieces
 
     def arePiecesCompleted(self):
+        self.checkDownloadedPieces()
         for piece in self.pieces:
             if not piece.finished:
                 return False

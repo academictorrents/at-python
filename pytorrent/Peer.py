@@ -51,10 +51,9 @@ class Peer(object):
             self.socket = socket.create_connection((self.ip, self.port), timeout)
             logging.info("connected to peer ip: {} - port: {}".format(self.ip, self.port))
             self.build_handshake()
-
             return True
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
         return False
 
@@ -62,7 +61,7 @@ class Peer(object):
         return self.bitField[index]
 
     def build_handshake(self):
-        pstr = "BitTorrent protocol"
+        pstr = "BitTorrent protocol".encode('utf-8')
         reserved = "0" * 8
         hs = struct.pack("B" + str(len(pstr)) + "s8x20s20s",
                          len(pstr),

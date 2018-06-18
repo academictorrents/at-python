@@ -29,45 +29,40 @@ class Tracker(object):
 
     def getPeersFromTrackers(self):
         for tracker in self.torrent.announceList:
-            if tracker[0][:4] == "http":
-                t1 = FuncThread(self.scrapeHTTP, self.torrent,tracker[0])
-                self.lstThreads.append(t1)
-                t1.start()
+            if tracker[0] == '':
+                continue
+            elif tracker[0][:4] == "http":
+                self.scrapeHTTP(self.torrent, tracker[0])
+                #t1 = FuncThread(self.scrapeHTTP, self.torrent,tracker[0])
+                #self.lstThreads.append(t1)
+                #t1.start()
             else:
-                t2 = FuncThread(self.scrape_udp, self.torrent, tracker[0])
-                self.lstThreads.append(t2)
-                t2.start()
+                self.scrape_udp(self.torrent, tracker[0])
+                #t2 = FuncThread(self.scrape_udp, self.torrent, tracker[0])
+                #self.lstThreads.append(t2)
+                #t2.start()
 
         for t in self.lstThreads:
             t.join()
 
 
     def scrapeHTTP(self, torrent, tracker):
-
         params = {
             'info_hash': torrent.info_hash,
             'peer_id': torrent.peer_id,
             'uploaded': 0,
             'downloaded': 0,
             'left': torrent.totalLength,
-            'event': 'started'
+            'event': 'started',
+            'port': 6881
         }
         try:
-            answerTracker = requests.get(tracker, params=params, timeout=3)
-            lstPeers = bencode.decode(answerTracker.text)
-            self.parseTrackerResponse(lstPeers['peers'])
+            answerTracker = requests.get(tracker, params=params, timeout=20)
+            lstPeers = bencode.decode(answerTracker.content)
+            for peer in lstPeers['peers']:
+                self.newpeersQueue.put([peer['ip'], peer['port']])
         except:
             pass
-
-    def parseTrackerResponse(self, peersByte):
-        raw_bytes = [ord(c) for c in peersByte]
-        for i in range(len(raw_bytes) / 6):
-            start = i * 6
-            end = start + 6
-            ip = ".".join(str(i) for i in raw_bytes[start:end - 2])
-            port = raw_bytes[end - 2:end]
-            port = port[1] + port[0] * 256
-            self.newpeersQueue.put([ip, port])
 
 
     def make_connection_id_request(self):
@@ -135,7 +130,14 @@ class Tracker(object):
             response = self.send_msg(conn, sock, msg, trans_id, action, 20)
             if response == None or response == "":
                 return ""
-
-            self.parseTrackerResponse(response[20:])
+            peersByte = response[20:]
+            raw_bytes = [ord(c) for c in peersByte]
+            for i in range(len(raw_bytes) / 6):
+                start = i * 6
+                end = start + 6
+                ip = ".".join(str(i) for i in raw_bytes[start:end - 2])
+                port = raw_bytes[end - 2:end]
+                port = port[1] + port[0] * 256
+                self.newpeersQueue.put([ip, port])
         except:
             pass

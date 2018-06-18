@@ -35,17 +35,17 @@ class Piece(object):
         else:
             self.blocks.append(["Free", int(self.pieceSize), b"",0])
 
-    def setBlock(self, offset, data):
+    def setBlock(self, offset, data, write=True):
         if not self.finished:
             if offset == 0:
                 index = 0
             else:
-                index = offset / BLOCK_SIZE
+                index = int(offset / BLOCK_SIZE)
 
             self.blocks[index][2] = data
             self.blocks[index][0] = "Full"
 
-            self.isComplete()
+            self.isComplete(write=write)
 
     def getBlock(self, block_offset,block_length):
         return self.pieceData[block_offset:block_length]
@@ -68,8 +68,28 @@ class Piece(object):
                 return True
         return False
 
-    def isComplete(self):
 
+    def isCompleteOnDisk(self):
+        block_offset = 0
+        data = b''
+        for f in self.files:
+            try:
+                f_ptr = open(f["path"],'rb')
+            except IOError:
+                all_files_finished = False
+                break
+            f_ptr.seek(f["fileOffset"])
+            data += f_ptr.read(f["length"])
+            f_ptr.close()
+            block_offset += f['length']
+        if self.isHashPieceCorrect(data):
+            for block in range(self.num_blocks):
+                start_offset = block*BLOCK_SIZE
+                end_offset = block*BLOCK_SIZE + BLOCK_SIZE
+                self.setBlock(offset=start_offset, data=data[start_offset: end_offset], write=False)
+
+
+    def isComplete(self, write=True):
         # If there is at least one block Free|Pending -> Piece not complete -> return false
         for block in self.blocks:
             if block[0] == "Free" or block[0] == "Pending":
@@ -80,12 +100,14 @@ class Piece(object):
         if self.isHashPieceCorrect(data):
             self.finished = True
             self.pieceData = data
-            self.writeFilesOnDisk()
+            if write:
+                self.writeFilesOnDisk()
             pub.sendMessage('PiecesManager.PieceCompleted',pieceIndex=self.pieceIndex)
             return True
 
         else:
             return False
+
 
     def writeFunction(self,pathFile,data,offset):
         try:

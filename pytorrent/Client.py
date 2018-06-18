@@ -36,6 +36,7 @@ class Client(object):
 
     def start(self):
         old=0
+        self.piecesManager.checkDiskPieces()
         while not self.piecesManager.arePiecesCompleted() and self.http_timeout > 0.0:
             if len(self.peersManager.unchokedPeers) > 0:
                 for piece in self.piecesManager.pieces:
@@ -74,27 +75,28 @@ class Client(object):
                 print(self.peersManager.unchokedPeers[0].ip)
                ##########################
             else:
+                print("sleeping....")
                 time.sleep(0.1)
                 self.http_timeout -= .1
         print("No Peers Found -- Trying HTTP Backup")
 
-        if self.http_timeout <= 0.0:
-            urls_to_try = self.torrent.torrentFile.get('url-list', [])
-            if len(urls_to_try) > 0:
-                print("Downloading from backup URL: " + urls_to_try[0])
-                if self.torrent.torrentFile.get('info', {}).get('files') is not None:
-                    for f in self.torrent.torrentFile.get('info', {}).get('files'):
-                        response = requests.get(urls_to_try[0], stream=True, allow_redirects=True)
-                        with open(self.file_store + self.torrent.torrentFile.get('info', {}).get('name', '') + "/" + f['path'][0], 'wb') as handle:
-                            for block in response.iter_content(1024):
-                                handle.write(block)
-                else:
-                    response = requests.get(urls_to_try[0], stream=True, allow_redirects=True)
-                    with open(self.file_store + self.torrent.torrentFile.get('info', {}).get('name', ''), 'wb') as handle:
-                        for block in response.iter_content(1024):
-                            handle.write(block)
-            else:
-                print("No Backup URL Present")
+        # if self.http_timeout <= 0.0:
+        #     urls_to_try = self.torrent.torrentFile.get('url-list', [])
+        #     if len(urls_to_try) > 0:
+        #         print("Downloading from backup URL: " + urls_to_try[0])
+        #         if self.torrent.torrentFile.get('info', {}).get('files') is not None:
+        #             for f in self.torrent.torrentFile.get('info', {}).get('files'):
+        #                 response = requests.get(urls_to_try[0], stream=True, allow_redirects=True)
+        #                 with open(self.file_store + self.torrent.torrentFile.get('info', {}).get('name', '') + "/" + f['path'][0], 'wb') as handle:
+        #                     for block in response.iter_content(1024):
+        #                         handle.write(block)
+        #         else:
+        #             response = requests.get(urls_to_try[0], stream=True, allow_redirects=True)
+        #             with open(self.file_store + self.torrent.torrentFile.get('info', {}).get('name', ''), 'wb') as handle:
+        #                 for block in response.iter_content(1024):
+        #                     handle.write(block)
+        #     else:
+        #         print("No Backup URL Present")
 
         # gotta kill the threads
         self.peerSeeker.requestStop()
