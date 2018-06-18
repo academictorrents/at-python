@@ -81,7 +81,11 @@ class Peer(object):
 
     def build_request(self, index, offset, length):
         header = struct.pack('>I', 13)
-        id = '\x06'
+        id = b'\x06'
+
+        if isinstance(length, (bytes, bytearray)):
+            id = '\x06'
+
         index = struct.pack('>I', index)
         offset = struct.pack('>I', offset)
         length = struct.pack('>I', length)
@@ -117,7 +121,12 @@ class Peer(object):
             print(e)
 
     def checkHandshake(self, buf, pstr="BitTorrent protocol"):
-        if buf[1:20] == pstr:
+        if isinstance(buf, (bytes, bytearray)):
+            pstr_rec = buf[1:20].decode('utf-8')
+        else:
+            pstr_rec = buf[1:20]
+
+        if pstr_rec == pstr:
             handshake = buf[:68]
             expected_length, info_dict, info_hash, peer_id = struct.unpack(
                 "B" + str(len(pstr)) + "s8x20s20s",

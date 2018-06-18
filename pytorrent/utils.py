@@ -4,8 +4,9 @@ import hashlib
 
 def convertBytesToDecimal(headerBytes):
     size = 0
+    if isinstance(headerBytes, (bytes, bytearray)):
+        headerBytes = headerBytes.decode('utf-8')
     power = len(headerBytes) - 1
-
     for ch in headerBytes:
         size += int(ord(ch)) * 256 ** power
         power -= 1
