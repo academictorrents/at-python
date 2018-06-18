@@ -138,7 +138,7 @@ class Piece(object):
         if utils.sha1_hash(data) == self.pieceHash:
             return True
         else:
-            logging.warning("Error Piece Hash")
-            logging.debug("{} : {}".format(utils.sha1_hash(data),self.pieceHash))
+            #logging.warning("Error Piece Hash")
+            #logging.debug("{0} : {1}".format(utils.sha1_hash(data), self.pieceHash))
             self.initBlocks()
             return False

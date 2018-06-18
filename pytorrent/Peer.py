@@ -8,6 +8,8 @@ from pubsub import pub
 from . import utils
 import threading
 import logging
+from six import string_types
+
 
 class Peer(object):
     def __init__(self, torrent,ip, port=6881):
@@ -49,11 +51,11 @@ class Peer(object):
     def connectToPeer(self, timeout=10):
         try:
             self.socket = socket.create_connection((self.ip, self.port), timeout)
-            logging.info("connected to peer ip: {} - port: {}".format(self.ip, self.port))
+            logging.info("connected to peer ip: {0} - port: {1}".format(self.ip, self.port))
             self.build_handshake()
             return True
-        except Exception as e:
-            print(e)
+        except Exception:
+            print("connectToPeer Socket Timeout Error")
 
         return False
 
@@ -106,9 +108,13 @@ class Peer(object):
 
     def sendToPeer(self, msg):
         try:
+            #if isinstance(msg, string_types):
+            #    print("encoding")
+            #    msg = bytearray(msg, 'utf-8')
             self.socket.send(msg)
-        except:
-            pass
+        except Exception as e:
+            print("sendToPeer Error: ")
+            print(e)
 
     def checkHandshake(self, buf, pstr="BitTorrent protocol"):
         if buf[1:20] == pstr:

@@ -56,7 +56,6 @@ class PiecesManager(Thread):
         return pieces
 
     def arePiecesCompleted(self):
-        self.checkDownloadedPieces()
         for piece in self.pieces:
             if not piece.finished:
                 return False

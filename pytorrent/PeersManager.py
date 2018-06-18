@@ -62,6 +62,7 @@ class PeersManager(Thread):
                 try:
                     msg = socket.recv(1024)
                 except Exception as e:
+                    print("peersManager socket.recv error: ")
                     print(e)
                     print("removing peer: " + peer.ip)
                     self.removePeer(peer)
@@ -83,6 +84,7 @@ class PeersManager(Thread):
                     interested = peer.build_interested()
                     peer.sendToPeer(interested)
                 except Exception as e:
+                    print("startConnectToPeers Error: ")
                     print(e)
                     print("removing peer: " + peer.ip)
                     self.removePeer(peer)
