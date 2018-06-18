@@ -37,6 +37,5 @@ def get(hash, datastore=None):
     response = urlopen(url).read()
     open(torrent_path, 'wb').write(response)
     contents = bencode.decode(open(torrent_path, 'rb').read())
-    #if not os.path.isfile(torrent_dir + contents['info']['name']):
     Client.Client(torrent_path, torrent_dir).start()
     return torrent_dir + contents['info']['name']
