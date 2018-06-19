@@ -44,7 +44,6 @@ class Piece(object):
 
             self.blocks[index][2] = data
             self.blocks[index][0] = "Full"
-
             self.isComplete(write=write)
 
     def getBlock(self, block_offset,block_length):

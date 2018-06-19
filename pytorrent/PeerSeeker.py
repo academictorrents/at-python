@@ -20,9 +20,7 @@ class PeerSeeker(Thread):
 
     def run(self):
         while not self.stopRequested:
-            # TODO : if peerConnected == 50 sleep 50 seconds by adding new event, start,stop,slow ...
             peer = self.newpeersQueue.get()
-            print(peer)
             if not (peer[0], peer[1]) in self.peerFailed:
                 p = Peer.Peer(self.torrent, peer[0], peer[1])
                 if not p.connectToPeer(3):

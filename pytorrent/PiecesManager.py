@@ -38,9 +38,8 @@ class PiecesManager(Thread):
         self.bitfield[pieceIndex] = 1
 
     def receiveBlockPiece(self,piece):
-        piece_index,piece_offset,piece_data = piece
-        self.pieces[int(piece_index)].setBlock(piece_offset,piece_data)
-
+        piece_index, piece_offset, piece_data = piece
+        self.pieces[int(piece_index)].setBlock(piece_offset, piece_data)
 
     def generatePieces(self):
         pieces = []

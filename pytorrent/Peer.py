@@ -12,7 +12,7 @@ from six import string_types
 
 
 class Peer(object):
-    def __init__(self, torrent,ip, port=6881):
+    def __init__(self, torrent, ip, port=6881):
 
         self.lock = threading.Lock()
         self.handshake = None
@@ -112,9 +112,6 @@ class Peer(object):
 
     def sendToPeer(self, msg):
         try:
-            #if isinstance(msg, string_types):
-            #    print("encoding")
-            #    msg = bytearray(msg, 'utf-8')
             self.socket.send(msg)
         except Exception as e:
             print("sendToPeer Error: ")

@@ -2,11 +2,12 @@ __author__ = 'alexisgallepe'
 
 import select
 import struct
-from threading import Thread
+from threading import Thread, Timer
 from . import utils
 from pubsub import pub
 from . import RarestPieces
 import logging
+from . import HttpPeer, Peer
 
 
 class PeersManager(Thread):
@@ -24,11 +25,17 @@ class PeersManager(Thread):
         for i in range(self.piecesManager.numberOfPieces):
             self.piecesByPeer.append([0, []])
 
+        for url in self.torrent.torrentFile.get('url-list'):
+            peer = HttpPeer.HttpPeer(torrent, url)
+            if peer.hasHandshaked:
+                self.unchokedPeers.append(peer)
+
         # Events
         pub.subscribe(self.addPeer, 'PeersManager.newPeer')
         pub.subscribe(self.addUnchokedPeer, 'PeersManager.peerUnchoked')
         pub.subscribe(self.handlePeerRequests, 'PeersManager.PeerRequestsPiece')
         pub.subscribe(self.peersBitfield, 'PeersManager.updatePeersBitfield')
+        pub.subscribe(self.chokePeer, 'PeersManager.chokePeer')
 
     def requestStop(self):
         self.stopRequested = True
@@ -45,9 +52,8 @@ class PeersManager(Thread):
 
     def getUnchokedPeer(self, index):
         for peer in self.unchokedPeers:
-            if peer.hasPiece(index):
+            if isinstance(peer, HttpPeer.HttpPeer) or (isinstance(peer, Peer.Peer) and peer.hasPiece(index)):
                 return peer
-
         return False
 
     def run(self):
@@ -94,6 +100,10 @@ class PeersManager(Thread):
 
     def addUnchokedPeer(self, peer):
         self.unchokedPeers.append(peer)
+
+    def chokePeer(self, peer):
+        self.unchokedPeers = [x for x in self.unchokedPeers if not hasattr(x, 'url') or (hasattr(x, 'url') and x.url != peer.url)]
+        Timer(.005, self.addUnchokedPeer, [peer]).start()
 
     def removePeer(self, peer):
         if peer in self.peers:
@@ -156,6 +166,11 @@ class PeersManager(Thread):
                 logging.debug("error id:", msgCode, " ->", e)
                 return
 
-    def requestNewPiece(self, peer, pieceIndex, offset, length):
-        request = peer.build_request(pieceIndex, offset, length)
-        peer.sendToPeer(request)
+    def requestNewPiece(self, peer, pieceIndex, blockOffset, length):
+        if isinstance(peer, HttpPeer.HttpPeer):
+            fileOffset = self.piecesManager.pieces[pieceIndex].files[0].get('fileOffset', 0)
+            pieceOffset = self.piecesManager.pieces[pieceIndex].files[0].get('pieceOffset', 0)
+            resp = peer.make_request(pieceIndex, fileOffset, pieceOffset, blockOffset, length)
+        else:
+            request = peer.build_request(pieceIndex, blockOffset, length)
+            peer.sendToPeer(request)
