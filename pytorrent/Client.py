@@ -15,10 +15,9 @@ import requests
 
 
 class Client(object):
-    def __init__(self, torrent_path, file_store, http_timeout=10):
+    def __init__(self, torrent_path, file_store):
         newpeersQueue = Queue()
         self.torrent = Torrent.Torrent(torrent_path, file_store)
-        self.http_timeout = 10
         self.file_store = file_store
 
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
@@ -40,7 +39,7 @@ class Client(object):
         old_size = 0
 
         self.piecesManager.checkDiskPieces()
-        while not self.piecesManager.arePiecesCompleted() and self.http_timeout > 0.0:
+        while not self.piecesManager.arePiecesCompleted():
             if len(self.peersManager.unchokedPeers) > 0:
                 for piece in self.piecesManager.pieces:
                     if not piece.finished:
