@@ -28,14 +28,29 @@ def get_client():
 def get(hash, datastore=None):
     if not datastore:
         datastore = os.getcwd() + "/datastore/"
-    url = "http://academictorrents.com/download/" + hash
-
     torrent_dir = datastore + hash + '/'
-    torrent_path = os.path.join(torrent_dir, hash + '.torrent')
-    if not os.path.isdir(torrent_dir):
-        os.makedirs(torrent_dir)
-    response = urlopen(url).read()
-    open(torrent_path, 'wb').write(response)
-    contents = bencode.decode(open(torrent_path, 'rb').read())
-    Client.Client(torrent_path, torrent_dir).start()
+
+    contents = get_from_url(hash, torrent_dir)
+    if not contents:
+        contents = get_from_file(hash, torrent_dir)
+    Client.Client(hash, torrent_dir).start()
     return torrent_dir + contents['info']['name']
+
+def get_from_file(hash, torrent_dir):
+    torrent_path = os.path.join(torrent_dir, hash + '.torrent')
+    contents = bencode.decode(open(torrent_path, 'rb').read())
+    return contents
+
+def get_from_url(hash, torrent_dir):
+    contents = None
+    try:
+        url = "http://academictorrents.com/download/" + hash
+        torrent_path = os.path.join(torrent_dir, hash + '.torrent')
+        if not os.path.isdir(torrent_dir):
+            os.makedirs(torrent_dir)
+        response = urlopen(url).read()
+        open(torrent_path, 'wb').write(response)
+        contents = bencode.decode(open(torrent_path, 'rb').read())
+    except Exception as e:
+        print("could not download the torrent")
+    return contents

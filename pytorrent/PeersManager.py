@@ -15,6 +15,7 @@ class PeersManager(Thread):
         Thread.__init__(self)
         self.peers = []
         self.unchokedPeers = []
+        self.httpPeers = []
         self.torrent = torrent
         self.piecesManager = piecesManager
         self.rarestPieces = RarestPieces.RarestPieces(piecesManager)
@@ -26,9 +27,10 @@ class PeersManager(Thread):
             self.piecesByPeer.append([0, []])
 
         for url in self.torrent.torrentFile.get('url-list'):
-            peer = HttpPeer.HttpPeer(torrent, url)
-            if peer.hasHandshaked:
-                self.unchokedPeers.append(peer)
+            if url:
+                peer = HttpPeer.HttpPeer(torrent, url)
+                if peer.hasHandshaked:
+                    self.httpPeers.append(peer)
 
         # Events
         pub.subscribe(self.addPeer, 'PeersManager.newPeer')

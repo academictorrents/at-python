@@ -17,6 +17,7 @@ class Piece(object):
         self.finished = False
         self.files = []
         self.pieceData = b""
+        self.BLOCK_SIZE = BLOCK_SIZE
         self.num_blocks = int(math.ceil( float(pieceSize) / BLOCK_SIZE))
         self.blocks = []
         self.initBlocks()
@@ -58,8 +59,8 @@ class Piece(object):
                     block[3] = int(time.time())
                     return self.pieceIndex, blockIndex * BLOCK_SIZE, block[1]
                 blockIndex+=1
-
         return False
+
 
     def freeBlockLeft(self):
         for block in self.blocks:
@@ -118,13 +119,13 @@ class Piece(object):
         f.close()
 
     def writeFilesOnDisk(self):
-        for file in self.files:
-            pathFile = file["path"]
-            fileOffset = file["fileOffset"]
-            pieceOffset = file["pieceOffset"]
-            length = file["length"]
+        for f in self.files:
+            pathFile = f["path"]
+            fileOffset = f["fileOffset"]
+            pieceOffset = f["pieceOffset"]
+            length = f["length"]
 
-            self.writeFunction(pathFile,self.pieceData[pieceOffset:pieceOffset+length],fileOffset)
+            self.writeFunction(pathFile, self.pieceData[pieceOffset: pieceOffset + length], fileOffset)
 
 
     def assembleData(self):

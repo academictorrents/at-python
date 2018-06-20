@@ -13,7 +13,7 @@ class BasicTestSuite(unittest.TestCase):
         assert True
 
     def test_get_file_http(self):
-        filename = at.get('0332d23cc9909532b3b2c5ddcc3ac045f3f30ff4') # test torrent
+        filename = at.get('dfd956b3e86279213b3b9a82a3156990dc735cac') # test torrent
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
 
     def test_get_multiple_files(self):

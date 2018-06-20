@@ -7,7 +7,6 @@ class HttpPeer(object):
         self.readBuffer = b""
         self.torrent = torrent
         self.url = url
-
         resp = requests.head(url, allow_redirects=True)
         self.etag = resp.headers.get('etag', None)
         self.hasHandshaked = True if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False) else False

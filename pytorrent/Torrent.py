@@ -8,9 +8,9 @@ from . import utils
 
 
 class Torrent(object):
-    def __init__(self, path, file_store):
+    def __init__(self, hash, file_store):
         self.file_store = file_store
-        with open(path, 'rb') as file:
+        with open(file_store + hash + '.torrent', 'rb') as file:
             contents = file.read()
 
         self.torrentFile = bencode.decode(contents)
