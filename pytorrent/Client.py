@@ -72,6 +72,7 @@ class Client(object):
 
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
+        return torrent_dir + self.torrent.torrentFile.get('info', {}).get('name')
 
     def reset_pending_blocks(self, piece):
         for block in piece.blocks:

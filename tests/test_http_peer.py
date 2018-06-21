@@ -1,4 +1,6 @@
 from academictorrents import academictorrents as at
+from pytorrent import PiecesManager
+from pytorrent import Torrent
 import unittest
 import os
 import shutil
@@ -14,9 +16,12 @@ class HttpPeerTestSuite(unittest.TestCase):
         assert True
 
     def test_get_pieces(self):
-        #contents = at.get_from_file("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir)
-        #PiecesManager.PiecesManager()
+        # TODO: rewrite piecesmanager to be instantiable without an internet connection cause I'm on a freakin' plane.
+        torrent_dir = "tests/"
+        torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir)
+        piecesManager = PiecesManager.PiecesManager(torrent)
         assert True
+
     # TODO: request_ranges
     def test_request_ranges(self):
         assert True

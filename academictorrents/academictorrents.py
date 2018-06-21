@@ -30,11 +30,12 @@ def get(hash, datastore=None):
         datastore = os.getcwd() + "/datastore/"
     torrent_dir = datastore + hash + '/'
 
+    #TODO: remove this contents business, just make these ensure that the torrent exists
     contents = get_from_url(hash, torrent_dir)
     if not contents:
         contents = get_from_file(hash, torrent_dir)
-    Client.Client(hash, torrent_dir).start()
-    return torrent_dir + contents['info']['name']
+    path = Client.Client(hash, torrent_dir).start()
+    return path # torrent_dir + contents['info']['name']
 
 def get_from_file(hash, torrent_dir):
     torrent_path = os.path.join(torrent_dir, hash + '.torrent')
