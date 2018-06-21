@@ -12,8 +12,6 @@ import logging
 from queue import Queue
 import os
 import requests
-from collections import defaultdict
-from pubsub import pub
 
 
 class Client(object):
@@ -56,91 +54,24 @@ class Client(object):
 
                         piece.isComplete()
                         self.reset_pending_blocks(piece)
-
             if len(self.peersManager.httpPeers) > 0:
                 for httpPeer in self.peersManager.httpPeers:
-                    pieces = self.get_pieces()
-                    if pieces:
-                        pieces_by_file = self.construct_pieces_by_file(pieces)  # set all those blocks to Pending
-                        responses = self.request_ranges(httpPeer, pieces_by_file)
-                        self.publish_responses(responses, pieces_by_file)
+                    pieces = httpPeer.get_pieces(self.piecesManager)
+                    pieces_by_file = httpPeer.construct_pieces_by_file(pieces)  # set all those blocks to Pending
+                    responses = httpPeer.request_ranges(pieces_by_file)
+                    httpPeer.publish_responses(responses, pieces_by_file)
 
             new_size = self.checkPercentFinished()
             if new_size == old_size:
                 continue
 
             old_size = new_size
-            print("Number of peers: ",len(self.peersManager.unchokedPeers)," Completed: ",float((float(new_size) / self.torrent.totalLength)*100),"%")
+            print("# Peers:",len(self.peersManager.unchokedPeers)," # HTTPSeeds:",len(self.peersManager.httpPeers)," Completed: ",float((float(new_size) / self.torrent.totalLength)*100),"%")
 
             time.sleep(0.1)
 
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
-
-    def publish_responses(self, responses, pieces_by_file):
-        offset = 0
-        for filename, pieces in pieces_by_file.items():
-            blockOffset = 0
-            resp = responses.get(filename)
-            for piece in pieces:
-                for block in piece.blocks:
-                    start = offset + blockOffset
-                    end = offset + blockOffset + piece.BLOCK_SIZE
-                    pub.sendMessage('PiecesManager.Piece', piece=(piece.pieceIndex, blockOffset, resp.content[start: end]))
-                    blockOffset += piece.BLOCK_SIZE
-                blockOffset = 0
-                offset += piece.pieceSize
-
-    def get_pieces(self):
-        # TODO: Add another way to exit this loop when we don't hit the max size
-        size = 0
-        temp_size = 0
-        max_size_to_download = 15000000
-        temp_pieces = []
-        pieces = []
-        for idx, b in enumerate(self.piecesManager.bitfield):
-            piece = self.piecesManager.pieces[idx]
-            if not b:
-                temp_pieces.append(piece)
-                temp_size += piece.pieceSize
-
-            if size < temp_size:
-                size = temp_size
-                pieces = temp_pieces
-
-            if size > max_size_to_download:
-                return pieces
-
-            if b:
-                temp_pieces = []
-                temp_size = 0
-        return pieces
-
-    def request_ranges(self, httpPeer, pieces_by_file):
-        responses = {}
-        for filename, pieces in pieces_by_file.items():
-            start = pieces[0].files[0].get('fileOffset')
-            filename = pieces[0].files[0].get('path').split('/')[-1]
-            url = httpPeer.url
-            directory = httpPeer.torrent.torrentFile.get('name')
-            end = start
-            for piece in pieces:
-                end += piece.pieceSize
-            resp = requests.get(url, headers={'Range': 'bytes=' + str(start) + '-' + str(end)})
-            responses[filename] = resp
-        return responses
-
-
-    def construct_pieces_by_file(self, pieces):
-        pieces_by_file = defaultdict(list)
-        for piece in pieces:
-            if len(piece.files) == 1:
-                filename = piece.files[0].get('path').split('/')[-1]
-                pieces_by_file[filename].append(piece)
-            else:
-                pieces_by_file[str(len(pieces_by_file))].append(piece)
-        return pieces_by_file
-
 
     def reset_pending_blocks(self, piece):
         for block in piece.blocks:

@@ -8,6 +8,7 @@ from pubsub import pub
 from . import RarestPieces
 import logging
 from . import HttpPeer, Peer
+import time
 
 
 class PeersManager(Thread):
@@ -27,10 +28,12 @@ class PeersManager(Thread):
             self.piecesByPeer.append([0, []])
 
         for url in self.torrent.torrentFile.get('url-list'):
-            if url:
+            try:
                 peer = HttpPeer.HttpPeer(torrent, url)
-                if peer.hasHandshaked:
-                    self.httpPeers.append(peer)
+                self.httpPeers.append(peer)
+                print("adding HttpPeer: " + peer.url)
+            except Exception:
+                pass
 
         # Events
         pub.subscribe(self.addPeer, 'PeersManager.newPeer')
@@ -87,15 +90,17 @@ class PeersManager(Thread):
     def startConnectionToPeers(self):
         for peer in self.peers:
             if not peer.hasHandshaked:
-                try:
-                    peer.sendToPeer(peer.handshake)
-                    interested = peer.build_interested()
-                    peer.sendToPeer(interested)
-                except Exception as e:
-                    print("startConnectToPeers Error: ")
-                    print(e)
-                    print("removing peer: " + peer.ip)
-                    self.removePeer(peer)
+                if peer.lastHandshakeAttempt < time.time() - 10:
+                    peer.lastHandshakeAttempt = time.time()
+                    try:
+                        peer.sendToPeer(peer.handshake)
+                        interested = peer.build_interested()
+                        peer.sendToPeer(interested)
+                    except Exception as e:
+                        print("startConnectToPeers Error: ")
+                        print(e)
+                        print("removing peer: " + peer.ip)
+                        self.removePeer(peer)
 
     def addPeer(self, peer):
         self.peers.append(peer)
@@ -161,7 +166,6 @@ class PeersManager(Thread):
                 return
 
             peer.readBuffer = peer.readBuffer[msgLength + 4:]
-
             try:
                 peer.idFunction[msgCode](payload)
             except Exception as e:
@@ -169,10 +173,5 @@ class PeersManager(Thread):
                 return
 
     def requestNewPiece(self, peer, pieceIndex, blockOffset, length):
-        if isinstance(peer, HttpPeer.HttpPeer):
-            fileOffset = self.piecesManager.pieces[pieceIndex].files[0].get('fileOffset', 0)
-            pieceOffset = self.piecesManager.pieces[pieceIndex].files[0].get('pieceOffset', 0)
-            resp = peer.make_request(pieceIndex, fileOffset, pieceOffset, blockOffset, length)
-        else:
-            request = peer.build_request(pieceIndex, blockOffset, length)
-            peer.sendToPeer(request)
+        request = peer.build_request(pieceIndex, blockOffset, length)
+        peer.sendToPeer(request)

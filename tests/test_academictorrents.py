@@ -6,14 +6,23 @@ import os
 import sys, os, time
 
 
-class BasicTestSuite(unittest.TestCase):
-    """Basic test cases."""
+class AcademicTorrentsTestSuite(unittest.TestCase):
+    """Test cases on the academictorrents.py file."""
 
     def test_absolute_truth_and_meaning(self):
         assert True
 
+    def test_load_from_torrent(self):
+        torrent_dir = "tests/"
+        contents = at.get_from_file("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir)
+        self.assertTrue(len(contents)==7)
+
+    # TODO: Add a test for get_from_url
+
+    ### Integration-style tests ###
+
     def test_get_file_http(self):
-        filename = at.get('dfd956b3e86279213b3b9a82a3156990dc735cac') # test torrent
+        filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f') # test torrent
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
 
     def test_get_multiple_files(self):
@@ -46,6 +55,7 @@ class BasicTestSuite(unittest.TestCase):
         filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore=os.getcwd() + '/datastore/alt/') # test torrent
         assert filename == os.getcwd() + '/datastore/alt/' + '323a0048d87ca79b68f12a6350a57776b6a3b7fb' + '/mnist.pkl.gz'
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
+
 
 
 if __name__ == '__main__':

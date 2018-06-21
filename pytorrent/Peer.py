@@ -13,7 +13,7 @@ from six import string_types
 
 class Peer(object):
     def __init__(self, torrent, ip, port=6881):
-
+        self.lastHandshakeAttempt = 0
         self.lock = threading.Lock()
         self.handshake = None
         self.hasHandshaked = False
@@ -115,6 +115,7 @@ class Peer(object):
             self.socket.send(msg)
         except Exception as e:
             print("sendToPeer Error: ")
+            print(self.ip)
             print(e)
 
     def checkHandshake(self, buf, pstr="BitTorrent protocol"):

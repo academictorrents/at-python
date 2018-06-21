@@ -24,17 +24,30 @@ class Piece(object):
 
     def initBlocks(self):
         self.blocks = []
-
         if self.num_blocks > 1:
             for i in range(self.num_blocks):
-                    self.blocks.append(["Free", BLOCK_SIZE, b"",0])
+                    self.blocks.append(["Free", BLOCK_SIZE, b"", 0, False])
 
             # Last block of last piece, the special block
             if (self.pieceSize % BLOCK_SIZE) > 0:
                 self.blocks[self.num_blocks-1][1] = self.pieceSize % BLOCK_SIZE
-
         else:
-            self.blocks.append(["Free", int(self.pieceSize), b"",0])
+            self.blocks.append(["Free", int(self.pieceSize), b"", 0, False])
+
+    def get_file_offset(self, filename):
+        for f in self.files:
+            if f.get('path').split('/')[-1] == filename:
+                return f.get('fileOffset')
+
+    def get_file_length(self, filename):
+        for f in self.files:
+            if f.get('path').split('/')[-1] == filename:
+                return f.get('length')
+
+    def get_piece_offset(self, filename):
+        for f in self.files:
+            if f.get('path').split('/')[-1] == filename:
+                return f.get('pieceOffset')
 
     def setBlock(self, offset, data, write=True):
         if not self.finished:
@@ -94,7 +107,6 @@ class Piece(object):
         for block in self.blocks:
             if block[0] == "Free" or block[0] == "Pending":
                 return False
-
         # Before returning True, we must check if hashes match
         data = self.assembleData()
         if self.isHashPieceCorrect(data):
@@ -102,7 +114,7 @@ class Piece(object):
             self.pieceData = data
             if write:
                 self.writeFilesOnDisk()
-            pub.sendMessage('PiecesManager.PieceCompleted',pieceIndex=self.pieceIndex)
+            pub.sendMessage('PiecesManager.PieceCompleted', pieceIndex=self.pieceIndex)
             return True
 
         else:
