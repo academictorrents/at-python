@@ -137,7 +137,7 @@ class PeersManager(Thread):
 
     def handlePeerRequests(self,piece, peer):
         piece_index,block_offset,block_length = piece
-        block = self.piecesManager.getBlock(piece_index,block_offset,block_length)
+        block = self.piecesManager.get_block(piece_index,block_offset,block_length)
         piece = peer.build_request(self, piece_index,block_offset,block)
         peer.sendToPeer(piece)
 

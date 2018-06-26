@@ -23,7 +23,7 @@ class Client(object):
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
         self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.piecesManager = PiecesManager.PiecesManager(self.torrent)
-        self.peersManager = PeersManager.PeersManager(self.torrent,self.piecesManager)
+        self.peersManager = PeersManager.PeersManager(self.torrent, self.piecesManager)
 
         self.peersManager.start()
         logging.info("Peers-manager Started")
@@ -33,11 +33,11 @@ class Client(object):
 
         self.piecesManager.start()
         logging.info("Pieces-manager Started")
-        self.piecesManager.checkDiskPieces()
+        self.piecesManager.check_disk_pieces()
 
     def start(self):
         old_size = 0
-        while not self.piecesManager.arePiecesCompleted():
+        while not self.piecesManager.are_pieces_completed():
             if len(self.peersManager.unchokedPeers) > 0:
                 for piece in self.piecesManager.pieces:
                     if not piece.finished:
@@ -72,7 +72,7 @@ class Client(object):
 
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
-        return torrent_dir + self.torrent.torrentFile.get('info', {}).get('name')
+        return self.file_store
 
     def reset_pending_blocks(self, piece):
         for block in piece.blocks:

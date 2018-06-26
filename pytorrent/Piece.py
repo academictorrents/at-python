@@ -26,13 +26,13 @@ class Piece(object):
         self.blocks = []
         if self.num_blocks > 1:
             for i in range(self.num_blocks):
-                    self.blocks.append(["Free", BLOCK_SIZE, b"", 0, False])
+                    self.blocks.append(["Free", BLOCK_SIZE, b"", 0])
 
             # Last block of last piece, the special block
             if (self.pieceSize % BLOCK_SIZE) > 0:
                 self.blocks[self.num_blocks-1][1] = self.pieceSize % BLOCK_SIZE
         else:
-            self.blocks.append(["Free", int(self.pieceSize), b"", 0, False])
+            self.blocks.append(["Free", int(self.pieceSize), b"", 0])
 
     def get_file_offset(self, filename):
         for f in self.files:
@@ -60,7 +60,7 @@ class Piece(object):
             self.blocks[index][0] = "Full"
             self.isComplete(write=write)
 
-    def getBlock(self, block_offset,block_length):
+    def get_block(self, block_offset,block_length):
         return self.pieceData[block_offset:block_length]
 
     def getEmptyBlock(self):

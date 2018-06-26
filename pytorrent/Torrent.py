@@ -23,7 +23,7 @@ class Torrent(object):
         self.announceList = self.getTrakers()
         self.fileNames = []
 
-        self.getFiles()
+        self.get_files()
         if self.totalLength % self.pieceLength == 0:
             self.numberOfPieces = self.totalLength / self.pieceLength
         else:
@@ -35,7 +35,7 @@ class Torrent(object):
         assert(self.totalLength > 0)
         assert(len(self.fileNames) > 0)
 
-    def getFiles(self):
+    def get_files(self):
         root = self.file_store + self.torrentFile['info']['name'] #+ "/"
         if 'files' in self.torrentFile['info']:
             if not os.path.exists(root):

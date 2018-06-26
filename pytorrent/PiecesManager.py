@@ -14,34 +14,30 @@ class PiecesManager(Thread):
 
         self.numberOfPieces = torrent.numberOfPieces
         self.bitfield = bitstring.BitArray(self.numberOfPieces)
-        self.pieces = self.generatePieces()
-        self.files = self.getFiles()
+        self.pieces = self.generate_pieces()
+        self.files = self.get_files()
 
         for file in self.files:
             idPiece = file['idPiece']
             self.pieces[idPiece].files.append(file)
 
         # Create events
-        pub.subscribe(self.receiveBlockPiece, 'PiecesManager.Piece')
-        pub.subscribe(self.updateBitfield, 'PiecesManager.PieceCompleted')
+        pub.subscribe(self.receive_block_piece, 'PiecesManager.Piece')
+        pub.subscribe(self.update_bit_field, 'PiecesManager.PieceCompleted')
 
 
-    def checkDiskPieces(self):
+    def check_disk_pieces(self):
         for piece in self.pieces:
             piece.isCompleteOnDisk() # this should set all the finished bools on the finished pieces
 
-    def checkDownloadedPieces(self):
-        for piece in self.pieces:
-            piece.isComplete()
-
-    def updateBitfield(self,pieceIndex):
+    def update_bit_field(self,pieceIndex):
         self.bitfield[pieceIndex] = 1
 
-    def receiveBlockPiece(self,piece):
+    def receive_block_piece(self,piece):
         piece_index, piece_offset, piece_data = piece
         self.pieces[int(piece_index)].setBlock(piece_offset, piece_data)
 
-    def generatePieces(self):
+    def generate_pieces(self):
         pieces = []
         for i in range(self.numberOfPieces):
             start = i * 20
@@ -54,7 +50,7 @@ class PiecesManager(Thread):
                 pieces.append(Piece.Piece(i, self.torrent.pieceLength, self.torrent.pieces[start:end]))
         return pieces
 
-    def arePiecesCompleted(self):
+    def are_pieces_completed(self):
         for piece in self.pieces:
             if not piece.finished:
                 return False
@@ -63,7 +59,7 @@ class PiecesManager(Thread):
         logging.info("File(s) downloaded")
         return True
 
-    def getFiles(self):
+    def get_files(self):
         files = []
         pieceOffset = 0
         pieceSizeUsed = 0
@@ -95,12 +91,11 @@ class PiecesManager(Thread):
         return files
 
 
-    def getBlock(self, piece_index,block_offset,block_length):
-
+    def get_block(self, piece_index, block_offset, block_length):
         for piece in self.pieces:
             if piece_index == piece.pieceIndex:
                 if piece.finished:
-                    return piece.getBlock(block_offset,block_length)
+                    return piece.get_block(block_offset,block_length)
                 else:
                     break
 

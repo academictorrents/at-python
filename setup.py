@@ -9,12 +9,24 @@ with open('LICENSE') as f:
 
 setup(
     name='academictorrents',
-    version='0.2.0',
+    version='0.3.1',
     description='Academic Torrents Python and R APIs',
     long_description=readme,
     author='Jonathan Nogueira, Martin Weiss',
     author_email='contact@academictorrents.com',
     url='https://github.com/AcademicTorrents/python-r-api',
+    classifiers=(
+        "Programming Language :: Python :: 2.6"
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.0",
+        "Programming Language :: Python :: 3.1",
+        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+    ),
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
