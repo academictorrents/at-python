@@ -9,7 +9,7 @@ with open('LICENSE') as f:
 
 setup(
     name='academictorrents',
-    version='0.3.1',
+    version='0.3.2',
     description='Academic Torrents Python and R APIs',
     long_description=readme,
     author='Jonathan Nogueira, Martin Weiss',
@@ -28,5 +28,13 @@ setup(
         "Programming Language :: Python :: 3.6",
     ),
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', 'docs')),
+    install_requires=[
+        'bencode.py == 2.0.0',
+        'bitstring == 3.1.5',
+        'PyPubSub == 3.3.0',
+        'requests == 2.7.0',
+        'pytest == 3.2.5',
+        'future == 0.16.0'
+    ]
 )
