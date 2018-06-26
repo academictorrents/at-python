@@ -10,7 +10,7 @@ with open('LICENSE') as f:
 setup(
     name='academictorrents',
     version='0.3.5',
-    description='Academic Torrents Python and R APIs',
+    description='Academic Torrents Python APIs',
     long_description=readme,
     author='Jonathan Nogueira, Martin Weiss',
     author_email='contact@academictorrents.com',
