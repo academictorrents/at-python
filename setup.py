@@ -9,7 +9,7 @@ with open('LICENSE') as f:
 
 setup(
     name='academictorrents',
-    version='0.3.5',
+    version='0.3.6',
     description='Academic Torrents Python APIs',
     long_description=readme,
     author='Jonathan Nogueira, Martin Weiss',
@@ -34,7 +34,6 @@ setup(
         'bitstring==3.1.5',
         'PyPubSub==3.3.0',
         'requests==2.7.0',
-        'pytest==3.2.5',
         'future==0.16.0'
     ]
 )
