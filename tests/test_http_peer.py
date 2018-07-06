@@ -1,6 +1,6 @@
 import academictorrents as at
-from pytorrent import PiecesManager
-from pytorrent import Torrent
+from academictorrents import PiecesManager
+from academictorrents import Torrent
 import unittest
 import os
 import shutil

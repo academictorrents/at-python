@@ -1,6 +1,6 @@
 import time
 import logging
-from pytorrent import Client
+from . import Client
 import logging
 import json
 import io
@@ -17,14 +17,6 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 
-
-at_client = None
-def get_client():
-    global at_client
-    if at_client is None:
-        at_client = ATClient()
-    return at_client
-
 def get(hash, datastore=None):
     if not datastore:
         datastore = os.getcwd() + "/datastore/"
@@ -35,7 +27,7 @@ def get(hash, datastore=None):
     if not contents:
         contents = get_from_file(hash, torrent_dir)
     path = Client.Client(hash, torrent_dir).start()
-    return path 
+    return path
 
 def get_from_file(hash, torrent_dir):
     torrent_path = os.path.join(torrent_dir, hash + '.torrent')
