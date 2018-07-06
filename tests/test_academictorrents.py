@@ -13,8 +13,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         assert True
 
     def test_load_from_torrent(self):
-        torrent_dir = "tests/"
-        contents = at.get_from_file("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir)
+        contents = at.get_from_file("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir="./tests/")
         self.assertTrue(len(contents)==7)
 
     # TODO: Add a test for get_from_url
@@ -35,7 +34,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         files = os.listdir(path)
         self.assertTrue(len(files) == 174)
         datastore = os.getcwd() + "/datastore/"
-        os.remove(datastore + "/b79869ca12787166de88311ca1f28e3ebec12dec/BreastCancerCell_dataset/ytma55_030603_benign2.TIF")
+        os.remove(datastore + "/BreastCancerCell_dataset/ytma55_030603_benign2.TIF")
         files = os.listdir(path)
         self.assertTrue(len(files) == 173)
         path = at.get('b79869ca12787166de88311ca1f28e3ebec12dec') # test torrent
@@ -53,7 +52,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
     # Test with different datastore
     def test_different_datastore(self):
         filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore=os.getcwd() + '/datastore/alt/') # test torrent
-        assert filename == os.getcwd() + '/datastore/alt/' + '323a0048d87ca79b68f12a6350a57776b6a3b7fb' + '/mnist.pkl.gz'
+        assert filename == os.getcwd() + '/datastore/alt/mnist.pkl.gz'
         self.assertTrue(os.path.isfile(filename)) #assert contains the correct file names
 
 
