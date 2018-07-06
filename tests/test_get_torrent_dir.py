@@ -11,15 +11,33 @@ class GetTestSuite(unittest.TestCase):
 
     def test_get_torrent_dir(self):
         path = at.get_torrent_dir(datastore='/data/lisa/data/', name="LUNA16")
-        print(path)
+        self.assertTrue(path == '/data/lisa/data/LUNA16/')
+
+    def test_get_torrent_dir_no_trailing_slash(self):
+        path = at.get_torrent_dir(datastore='/data/lisa/data', name="LUNA16")
+        self.assertTrue(path == '/data/lisa/data/LUNA16/')
+
+    def test_get_torrent_dir_slashes_on_name(self):
+        path = at.get_torrent_dir(datastore='/data/lisa/data/', name="/LUNA16/")
         self.assertTrue(path == '/data/lisa/data/LUNA16/')
 
     def test_get_torrent_dir_no_name(self):
         path = at.get_torrent_dir(datastore='/data/lisa/data/')
-        print(path)
         self.assertTrue(path == '/data/lisa/data/')
 
     def test_get_torrent_dir_default(self):
         path = at.get_torrent_dir()
-        print(path)
         self.assertTrue(path == os.getcwd() + "/datastore/")
+
+    def test_get_torrent_dir_relative(self):
+        path = at.get_torrent_dir(datastore="datastore/")
+        self.assertTrue(path == os.getcwd() + "/datastore/")
+
+    def test_get_torrent_dir_relative_dot(self):
+        path = at.get_torrent_dir(".")
+        print(path)
+        self.assertTrue(path == "./")
+
+    def test_get_torrent_dir_relative_tilde(self):
+        path = at.get_torrent_dir("~/mycooldatastore")
+        self.assertTrue(path == "~/mycooldatastore/")

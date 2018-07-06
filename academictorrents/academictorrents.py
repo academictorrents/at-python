@@ -20,8 +20,16 @@ except ImportError:
 def get_torrent_dir(datastore=None, name=None):
     if not datastore:
         datastore = os.getcwd() + "/datastore/"
+    elif datastore == ".":
+        datastore = "./"
+    elif datastore[-1] != "/":
+        datastore = datastore + "/"
+    elif datastore[0] != "/":
+        datastore = os.getcwd() + "/" + datastore
     if not name:
         return datastore
+    if isinstance(name, str):
+        name = name.strip("/")
     return datastore + name + '/'
 
 def get(hash, datastore=None, name=None):
