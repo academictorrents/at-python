@@ -10,6 +10,8 @@ try:
 except ImportError:
     from urlparse import urlparse
 import threading, time
+import pkg_resources
+
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
@@ -32,15 +34,14 @@ class Tracker(object):
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
-                self.scrapeHTTP(self.torrent, tracker[0])
-                #t1 = FuncThread(self.scrapeHTTP, self.torrent,tracker[0])
-                #self.lstThreads.append(t1)
-                #t1.start()
+                t1 = FuncThread(self.scrapeHTTP, self.torrent, tracker[0])
+                self.lstThreads.append(t1)
+                t1.start()
             else:
-                self.scrape_udp(self.torrent, tracker[0])
-                #t2 = FuncThread(self.scrape_udp, self.torrent, tracker[0])
-                #self.lstThreads.append(t2)
-                #t2.start()
+                #self.scrape_udp(self.torrent, tracker[0])
+                t2 = FuncThread(self.scrape_udp, self.torrent, tracker[0])
+                self.lstThreads.append(t2)
+                t2.start()
 
         for t in self.lstThreads:
             t.join()
@@ -63,6 +64,31 @@ class Tracker(object):
                 self.newpeersQueue.put([peer['ip'], peer['port']])
         except:
             pass
+
+    def stop_message(self, downloaded, remaining):
+        if downloaded == 0:
+            return True
+        for tracker in self.torrent.announceList:
+            if tracker[0] == '':
+                continue
+            elif tracker[0][:4] == "http":
+                event = "finished" if remaining == 0 else "stopped"
+                version = pkg_resources.require("AcademicTorrents")[0].version
+                params = {
+                    'info_hash': self.torrent.info_hash,
+                    'peer_id': self.torrent.peer_id,
+                    'uploaded': 0,
+                    'downloaded': downloaded,
+                    'left': remaining,
+                    'event': event,
+                    'port': 6881
+                }
+                try:
+
+                    resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + version + " " + requests.utils.default_user_agent()})
+                except:
+                    pass
+            return params, resp
 
 
     def make_connection_id_request(self):

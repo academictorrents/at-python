@@ -73,17 +73,12 @@ class Client(object):
             print("# Peers:",len(self.peersManager.unchokedPeers)," # HTTPSeeds:",len(self.peersManager.httpPeers)," Completed: ",float((float(new_size) / self.torrent.totalLength)*100),"%")
 
             time.sleep(0.1)
-        self.record_progress(starting_size, new_size)
+        downloaded = new_size - starting_size
+        remaining = self.torrent.totalLength - (starting_size + downloaded)
+        self.tracker.stop_message(downloaded, remaining)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
         return self.file_store + self.torrent.torrentFile['info']['name']
-
-    def record_progress(self, starting_size, new_size):
-        url = "http://academictorrents.com/analytics/" + self.hash
-        amt_downloaded = new_size - starting_size
-        if amt_downloaded > 0:
-            params={'downloaded': amt_downloaded}
-            requests.post(url, params=json.dumps(params), timeout=20)
 
 
     def reset_pending_blocks(self, piece):

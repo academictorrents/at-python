@@ -19,7 +19,7 @@ class Torrent(object):
         self.pieces = self.torrentFile['info']['pieces']
 
         self.info_hash = utils.sha1_hash(bencode.encode(self.torrentFile['info']))
-        self.peer_id = self.generatePeerId()
+        self.peer_id = self.generate_peer_id()
         self.announceList = self.getTrakers()
         self.fileNames = []
 
@@ -60,6 +60,6 @@ class Torrent(object):
         else:
             return [[ self.torrentFile['announce'] ]]
 
-    def generatePeerId(self):
+    def generate_peer_id(self):
         seed = str(time.time())
         return utils.sha1_hash(seed.encode())
