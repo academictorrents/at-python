@@ -17,11 +17,15 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 
-def get(hash, datastore=None, name=None):
+def get_torrent_dir(datastore=None, name=None):
     if not datastore:
         datastore = os.getcwd() + "/datastore/"
-    torrent_dir = datastore + hash + '/'
+    if not name:
+        return datastore
+    return datastore + name + '/'
 
+def get(hash, datastore=None, name=None):
+    torrent_dir = get_torrent_dir(datastore, name)
     #TODO: remove this contents business, just make these ensure that the torrent exists
     contents = get_from_url(hash, torrent_dir)
     if not contents:
