@@ -12,12 +12,14 @@ import logging
 from queue import Queue
 import os
 import requests
+import json
 
 
 class Client(object):
     def __init__(self, hash, file_store):
         newpeersQueue = Queue()
         self.torrent = Torrent.Torrent(hash, file_store)
+        self.hash = hash
         self.file_store = file_store
 
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
@@ -36,6 +38,8 @@ class Client(object):
         self.piecesManager.check_disk_pieces()
 
     def start(self):
+        starting_size = self.checkPercentFinished()
+        new_size = starting_size
         old_size = 0
         while not self.piecesManager.are_pieces_completed():
             if len(self.peersManager.unchokedPeers) > 0:
@@ -69,10 +73,18 @@ class Client(object):
             print("# Peers:",len(self.peersManager.unchokedPeers)," # HTTPSeeds:",len(self.peersManager.httpPeers)," Completed: ",float((float(new_size) / self.torrent.totalLength)*100),"%")
 
             time.sleep(0.1)
-
+        self.record_progress(starting_size, new_size)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
         return self.file_store + self.torrent.torrentFile['info']['name']
+
+    def record_progress(self, starting_size, new_size):
+        url = "http://academictorrents.com/analytics/" + self.hash
+        amt_downloaded = new_size - starting_size
+        if amt_downloaded > 0:
+            params={'downloaded': amt_downloaded}
+            requests.post(url, params=json.dumps(params), timeout=20)
+
 
     def reset_pending_blocks(self, piece):
         for block in piece.blocks:

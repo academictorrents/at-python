@@ -35,7 +35,7 @@ def get(hash, datastore=None):
     if not contents:
         contents = get_from_file(hash, torrent_dir)
     path = Client.Client(hash, torrent_dir).start()
-    return path  #torrent_dir + contents['info']['name']
+    return path 
 
 def get_from_file(hash, torrent_dir):
     torrent_path = os.path.join(torrent_dir, hash + '.torrent')

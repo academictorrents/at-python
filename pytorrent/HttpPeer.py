@@ -91,7 +91,6 @@ class HttpPeer(object):
                     pub.sendMessage('PiecesManager.Piece', piece=(piece.pieceIndex, blockOffset, piece.pieceData[blockOffset: blockOffset + block_size]))
                     blockOffset += block_size
             except Exception:
-                import pdb; pdb.set_trace()
                 pass
 
     def construct_pieces_by_file(self, pieces):
