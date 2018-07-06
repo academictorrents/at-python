@@ -1,6 +1,6 @@
 __author__ = 'alexisgallepe'
 
-from . import Piece
+import Piece
 import bitstring
 import logging
 from threading import Thread

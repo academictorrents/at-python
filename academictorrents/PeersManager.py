@@ -3,11 +3,11 @@ __author__ = 'alexisgallepe'
 import select
 import struct
 from threading import Thread, Timer
-from . import utils
+import utils
 from pubsub import pub
-from . import RarestPieces
+import RarestPieces
 import logging
-from . import HttpPeer, Peer
+import HttpPeer, Peer
 import time
 
 

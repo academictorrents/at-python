@@ -2,12 +2,12 @@
 __author__ = 'alexisgallepe'
 
 import time
-from . import PeersManager
-from . import PeerSeeker
-from . import PiecesManager
-from . import Torrent
-from . import Tracker
-from . import HttpPeer
+import PeersManager
+import PeerSeeker
+import PiecesManager
+import Torrent
+import Tracker
+import HttpPeer
 import logging
 from queue import Queue
 import os

@@ -1,6 +1,6 @@
 import time
 import logging
-from pytorrent import Client
+import Client
 import logging
 import json
 import io

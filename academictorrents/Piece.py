@@ -4,7 +4,7 @@ import math
 import time
 import logging
 
-from . import utils
+import utils
 from pubsub import pub
 
 BLOCK_SIZE = 2 ** 14
