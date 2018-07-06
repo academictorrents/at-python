@@ -3,7 +3,7 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(description='AT Simple command line tool')
-parser.add_argument('-hash', type=str, nargs='?',default="sq", help='Hash of torrent to download')
+parser.add_argument('-hash', type=str, nargs='?', required=True, help='Hash of torrent to download')
 args = parser.parse_args()
 
 filename = at.get(args.hash)
