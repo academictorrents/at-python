@@ -1,4 +1,4 @@
-from academictorrents import academictorrents as at
+import academictorrents as at
 from pytorrent import PiecesManager
 from pytorrent import Torrent
 import unittest

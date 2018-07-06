@@ -9,10 +9,10 @@ with open('LICENSE') as f:
 
 setup(
     name='academictorrents',
-    version='0.3.6',
+    version='0.3.7',
     description='Academic Torrents Python APIs',
     long_description=readme,
-    author='Jonathan Nogueira, Martin Weiss',
+    author='Martin Weiss, Alexis Gallepe, Jonathan Nogueira',
     author_email='contact@academictorrents.com',
     url='https://github.com/AcademicTorrents/python-r-api',
     classifiers=(

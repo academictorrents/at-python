@@ -1,4 +1,4 @@
-from academictorrents import academictorrents as at
+import academictorrents as at
 import unittest
 import os
 import shutil
