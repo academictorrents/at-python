@@ -17,7 +17,7 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 
-def get(hash, datastore=None):
+def get(hash, datastore=None, name=None):
     if not datastore:
         datastore = os.getcwd() + "/datastore/"
     torrent_dir = datastore + hash + '/'
