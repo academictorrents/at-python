@@ -1,6 +1,6 @@
 import time
 import logging
-import Client
+from . import Client
 import logging
 import json
 import io

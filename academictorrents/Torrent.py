@@ -4,7 +4,7 @@ import time
 import bencode
 import logging
 import os
-import utils
+from . import utils
 
 
 class Torrent(object):
