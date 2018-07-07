@@ -7,6 +7,8 @@ import io
 import os
 import bencode
 import requests
+import pkg_resources
+
 try:
     from urllib.parse import urlparse, urlencode
     from urllib.request import urlopen, Request
@@ -59,3 +61,5 @@ def get_from_url(hash, torrent_dir):
     except Exception as e:
         print("could not download the torrent")
     return contents
+
+__version__ = pkg_resources.require("AcademicTorrents")[0].version
