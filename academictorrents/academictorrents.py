@@ -5,7 +5,7 @@ import io
 import os
 import bencode
 import requests
-import utils
+from . import utils
 import pkg_resources
 from .Client import Client
 from .Torrent import Torrent
