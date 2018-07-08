@@ -12,12 +12,6 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
     def test_absolute_truth_and_meaning(self):
         assert True
 
-    def test_load_from_torrent(self):
-        contents = at.get_from_file("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir="./tests/")
-        self.assertTrue(len(contents)==7)
-
-    # TODO: Add a test for get_from_url
-
     ### Integration-style tests ###
 
     def test_get_file_http(self):

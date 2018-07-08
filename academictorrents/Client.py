@@ -2,29 +2,33 @@
 __author__ = 'alexisgallepe'
 
 import time
+import logging
+import os
+import requests
+import json
+import datetime
+from queue import Queue
 from . import PeersManager
 from . import PeerSeeker
 from . import PiecesManager
 from . import Torrent
 from . import Tracker
 from . import HttpPeer
-import logging
-from queue import Queue
-import os
-import requests
-import json
+from . import utils
 
 
 class Client(object):
-    def __init__(self, hash, file_store):
-        newpeersQueue = Queue()
-        self.torrent = Torrent.Torrent(hash, file_store)
-        self.hash = hash
-        self.file_store = file_store
+    @classmethod
 
+    def __init__(self, hash, torrent_dir):
+        newpeersQueue = Queue()
+        self.hash = hash
+        self.torrent_dir = torrent_dir
+    
+        self.torrent = Torrent.Torrent(self.hash, self.torrent_dir)
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
-        self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.piecesManager = PiecesManager.PiecesManager(self.torrent)
+        self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.peersManager = PeersManager.PeersManager(self.torrent, self.piecesManager)
 
         self.peersManager.start()
@@ -35,10 +39,12 @@ class Client(object):
 
         self.piecesManager.start()
         logging.info("Pieces-manager Started")
+
         self.piecesManager.check_disk_pieces()
 
+
     def start(self):
-        starting_size = self.checkPercentFinished()
+        starting_size = self.check_percent_finished()
         new_size = starting_size
         old_size = 0
         while not self.piecesManager.are_pieces_completed():
@@ -65,7 +71,7 @@ class Client(object):
                     responses = httpPeer.request_ranges(pieces_by_file)
                     httpPeer.publish_responses(responses, pieces_by_file)
 
-            new_size = self.checkPercentFinished()
+            new_size = self.check_percent_finished()
             if new_size == old_size:
                 continue
 
@@ -78,8 +84,11 @@ class Client(object):
         self.tracker.stop_message(downloaded, remaining)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
-        return self.file_store + self.torrent.torrentFile['info']['name']
 
+        if remaining == 0:
+            utils.write_timestamp(self.hash)
+
+        return self.torrent_dir + self.torrent.torrentFile['info']['name']
 
     def reset_pending_blocks(self, piece):
         for block in piece.blocks:
@@ -87,7 +96,7 @@ class Client(object):
                 block[0] = "Free"
                 block[3] = 0
 
-    def checkPercentFinished(self):
+    def check_percent_finished(self):
         b=0
         for i in range(self.piecesManager.numberOfPieces):
             for j in range(self.piecesManager.pieces[i].num_blocks):
