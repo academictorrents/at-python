@@ -53,16 +53,22 @@ def write_timestamp(hash):
         timestamps[hash] = int(datetime.datetime.now().strftime("%s"))
         json.dump(timestamps, f)
 
+
 def read_timestamp(hash):
     filename = get_timestamp_filename()
-    with open(filename) as f:
-        return json.load(f).get('hash', 0)
+    try:
+        with open(filename) as f:
+            return json.load(f).get('hash', 0)
+    except Exception:
+        return 0
+
 
 def timestamp_is_recent(timestamp):
     seconds_in_a_month = 86400 * 30
     if timestamp > int(datetime.datetime.now().strftime("%s")) - seconds_in_a_month:
         return True
     return False
+
 
 def filenames_present(torrent, datastore):
     name = torrent['info']['name']
