@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-
+import academictorrents as at
 
 with open('README.md') as f:
     readme = f.read()
@@ -9,7 +9,7 @@ with open('LICENSE') as f:
 
 setup(
     name='academictorrents',
-    version='2.0.9',
+    version=at.__version__,
     description='Academic Torrents Python APIs',
     long_description=readme,
     author='Martin Weiss, Alexis Gallepe, Jonathan Nogueira',

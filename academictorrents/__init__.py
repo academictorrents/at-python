@@ -1,2 +1,2 @@
 from .academictorrents import get
-from .academictorrents import __version__
+__version__ = "2.0.9"
