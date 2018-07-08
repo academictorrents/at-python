@@ -5,6 +5,7 @@ import os
 import json
 import datetime
 
+
 def convertBytesToDecimal(headerBytes):
     size = 0
     power = len(headerBytes) - 1
@@ -16,13 +17,15 @@ def convertBytesToDecimal(headerBytes):
         power -= 1
     return size
 
+
 def sha1_hash(string):
-    """Return 20-byte sha1 hash of string.
-    """
+    """Return 20-byte sha1 hash of string."""
     return hashlib.sha1(string).digest()
+
 
 def get_timestamp_filename():
     return os.getcwd() + "/torrent_timestamps.json"
+
 
 def get_torrent_dir(datastore=None, name=None):
     if not datastore:
@@ -38,6 +41,7 @@ def get_torrent_dir(datastore=None, name=None):
     if isinstance(name, str):
         name = name.strip("/")
     return datastore + name + '/'
+
 
 def write_timestamp(hash):
     filename = get_timestamp_filename()

@@ -19,12 +19,11 @@ from . import utils
 
 class Client(object):
     @classmethod
-
     def __init__(self, hash, torrent_dir):
         newpeersQueue = Queue()
         self.hash = hash
         self.torrent_dir = torrent_dir
-    
+
         self.torrent = Torrent.Torrent(self.hash, self.torrent_dir)
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
         self.piecesManager = PiecesManager.PiecesManager(self.torrent)
@@ -41,7 +40,6 @@ class Client(object):
         logging.info("Pieces-manager Started")
 
         self.piecesManager.check_disk_pieces()
-
 
     def start(self):
         starting_size = self.check_percent_finished()
@@ -76,7 +74,7 @@ class Client(object):
                 continue
 
             old_size = new_size
-            print("# Peers:",len(self.peersManager.unchokedPeers)," # HTTPSeeds:",len(self.peersManager.httpPeers)," Completed: ",float((float(new_size) / self.torrent.totalLength)*100),"%")
+            print("# Peers:", len(self.peersManager.unchokedPeers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
 
             time.sleep(0.1)
         downloaded = new_size - starting_size
@@ -92,14 +90,14 @@ class Client(object):
 
     def reset_pending_blocks(self, piece):
         for block in piece.blocks:
-            if ( int(time.time()) - block[3] ) > 8 and block[0] == "Pending" :
+            if(int(time.time()) - block[3]) > 8 and block[0] == "Pending":
                 block[0] = "Free"
                 block[3] = 0
 
     def check_percent_finished(self):
-        b=0
+        b = 0
         for i in range(self.piecesManager.numberOfPieces):
             for j in range(self.piecesManager.pieces[i].num_blocks):
-                if self.piecesManager.pieces[i].blocks[j][0]=="Full":
-                    b+=len(self.piecesManager.pieces[i].blocks[j][2])
+                if self.piecesManager.pieces[i].blocks[j][0] == "Full":
+                    b += len(self.piecesManager.pieces[i].blocks[j][2])
         return b

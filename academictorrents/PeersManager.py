@@ -46,7 +46,7 @@ class PeersManager(Thread):
         self.stopRequested = True
 
     def peersBitfield(self, bitfield=None, peer=None, pieceIndex=None):
-        if not pieceIndex == None:
+        if pieceIndex is not None:
             self.piecesByPeer[pieceIndex] = ["", []]
             return
 
@@ -116,7 +116,7 @@ class PeersManager(Thread):
         if peer in self.peers:
             try:
                 peer.socket.close()
-            except:
+            except Exception:
                 pass
 
             self.peers.remove(peer)
@@ -135,15 +135,15 @@ class PeersManager(Thread):
 
         raise ("peer not present in PeerList")
 
-    def handlePeerRequests(self,piece, peer):
-        piece_index,block_offset,block_length = piece
-        block = self.piecesManager.get_block(piece_index,block_offset,block_length)
-        piece = peer.build_request(self, piece_index,block_offset,block)
+    def handlePeerRequests(self, piece, peer):
+        piece_index, block_offset, block_length = piece
+        block = self.piecesManager.get_block(piece_index, block_offset, block_length)
+        piece = peer.build_request(self, piece_index, block_offset, block)
         peer.sendToPeer(piece)
 
     def manageMessageReceived(self, peer):
         while len(peer.readBuffer) > 0:
-            if peer.hasHandshaked == False:
+            if peer.hasHandshaked is False:
                 peer.checkHandshake(peer.readBuffer)
                 return
 

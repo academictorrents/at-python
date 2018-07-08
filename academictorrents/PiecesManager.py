@@ -6,6 +6,7 @@ import logging
 from threading import Thread
 from pubsub import pub
 
+
 class PiecesManager(Thread):
     def __init__(self, torrent):
         Thread.__init__(self)

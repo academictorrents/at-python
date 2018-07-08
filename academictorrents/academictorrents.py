@@ -10,6 +10,7 @@ import pkg_resources
 from .Client import Client
 from .Torrent import Torrent
 
+
 def get(hash, datastore=None, name=None):
     torrent_dir = utils.get_torrent_dir(datastore=datastore, name=name)
     torrent = Torrent(hash, torrent_dir)
@@ -21,4 +22,4 @@ def get(hash, datastore=None, name=None):
         return Client(hash, torrent_dir).start()
 
 
-__version__ = pkg_resources.require("AcademicTorrents")[0].version
+__version__ = pkg_resources.get_distribution("academictorrents").version

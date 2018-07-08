@@ -59,7 +59,7 @@ class Peer(object):
 
         return False
 
-    def hasPiece(self,index):
+    def hasPiece(self, index):
         return self.bitField[index]
 
     def build_handshake(self):
@@ -77,7 +77,6 @@ class Peer(object):
 
     def build_interested(self):
         return struct.pack('!I', 1) + struct.pack('!B', 2)
-
 
     def build_request(self, index, offset, length):
         header = struct.pack('>I', 13)
@@ -106,7 +105,7 @@ class Peer(object):
     def build_bitfield(self):
         length = struct.pack('>I', 4)
         id = '\x05'
-        bitfield= self.bitField.tobytes()
+        bitfield = self.bitField.tobytes()
         bitfield = length + id + bitfield
         return bitfield
 
@@ -132,11 +131,11 @@ class Peer(object):
 
             if self.torrent.info_hash == info_hash:
                 self.hasHandshaked = True
-                #self.sendToPeer(self.build_bitfield())
+                # self.sendToPeer(self.build_bitfield())
             else:
                 logging.warning("Error with peer's handshake")
 
-            self.readBuffer = self.readBuffer[28 +len(info_hash)+20:]
+            self.readBuffer = self.readBuffer[28 + len(info_hash)+20:]
 
     def keep_alive(self, payload):
         try:
@@ -144,52 +143,52 @@ class Peer(object):
             if keep_alive == 0:
                 logging.info('KEEP ALIVE')
                 return True
-        except:
+        except Exception:
             pass
 
         return False
 
-    def choke(self,payload=None):
+    def choke(self, payload=None):
         logging.info('choke')
         print("choking peer: " + self.ip)
         self.state['peer_choking'] = True
 
-    def unchoke(self,payload=None):
+    def unchoke(self, payload=None):
         logging.info('unchoke')
         print("Unchoking peer: " + self.ip)
-        pub.sendMessage('PeersManager.peerUnchoked',peer=self)
+        pub.sendMessage('PeersManager.peerUnchoked', peer=self)
         self.state['peer_choking'] = False
 
-    def interested(self,payload=None):
+    def interested(self, payload=None):
         logging.info('interested')
         self.state['peer_interested'] = True
 
-    def not_interested(self,payload=None):
+    def not_interested(self, payload=None):
         logging.info('not_interested')
         self.state['peer_interested'] = False
 
     def have(self, payload):
         index = utils.convertBytesToDecimal(payload)
         self.bitField[index] = True
-        pub.sendMessage('RarestPiece.updatePeersBitfield',bitfield=self.bitField,peer=self)
+        pub.sendMessage('RarestPiece.updatePeersBitfield', bitfield=self.bitField, peer=self)
 
     def bitfield(self, payload):
         self.bitField = BitArray(bytes=payload)
         logging.info('request')
-        pub.sendMessage('RarestPiece.updatePeersBitfield',bitfield=self.bitField,peer=self)
+        pub.sendMessage('RarestPiece.updatePeersBitfield', bitfield=self.bitField, peer=self)
 
     def request(self, payload):
         piece_index = payload[:4]
         block_offset = payload[4:8]
         block_length = payload[8:]
         logging.info('request')
-        pub.sendMessage('PiecesManager.PeerRequestsPiece',piece=(piece_index,block_offset,block_length), peer=self)
+        pub.sendMessage('PiecesManager.PeerRequestsPiece', piece=(piece_index, block_offset, block_length), peer=self)
 
     def piece(self, payload):
         piece_index = utils.convertBytesToDecimal(payload[:4])
         piece_offset = utils.convertBytesToDecimal(payload[4:8])
         piece_data = payload[8:]
-        pub.sendMessage('PiecesManager.Piece',piece=(piece_index,piece_offset,piece_data))
+        pub.sendMessage('PiecesManager.Piece', piece=(piece_index, piece_offset, piece_data))
 
     def cancel(self, payload=None):
         logging.info('cancel')

@@ -9,6 +9,7 @@ from pubsub import pub
 
 BLOCK_SIZE = 2 ** 14
 
+
 class Piece(object):
     def __init__(self, pieceIndex, pieceSize, pieceHash):
         self.pieceIndex = pieceIndex
@@ -18,7 +19,7 @@ class Piece(object):
         self.files = []
         self.pieceData = b""
         self.BLOCK_SIZE = BLOCK_SIZE
-        self.num_blocks = int(math.ceil( float(pieceSize) / BLOCK_SIZE))
+        self.num_blocks = int(math.ceil(float(pieceSize) / BLOCK_SIZE))
         self.blocks = []
         self.initBlocks()
 
@@ -60,7 +61,7 @@ class Piece(object):
             self.blocks[index][0] = "Full"
             self.isComplete(write=write)
 
-    def get_block(self, block_offset,block_length):
+    def get_block(self, block_offset, block_length):
         return self.pieceData[block_offset:block_length]
 
     def getEmptyBlock(self):
@@ -71,9 +72,8 @@ class Piece(object):
                     block[0] = "Pending"
                     block[3] = int(time.time())
                     return self.pieceIndex, blockIndex * BLOCK_SIZE, block[1]
-                blockIndex+=1
+                blockIndex += 1
         return False
-
 
     def freeBlockLeft(self):
         for block in self.blocks:
@@ -81,13 +81,12 @@ class Piece(object):
                 return True
         return False
 
-
     def isCompleteOnDisk(self):
         block_offset = 0
         data = b''
         for f in self.files:
             try:
-                f_ptr = open(f["path"],'rb')
+                f_ptr = open(f["path"], 'rb')
             except IOError:
                 all_files_finished = False
                 break
@@ -100,7 +99,6 @@ class Piece(object):
                 start_offset = block*BLOCK_SIZE
                 end_offset = block*BLOCK_SIZE + BLOCK_SIZE
                 self.setBlock(offset=start_offset, data=data[start_offset: end_offset], write=False)
-
 
     def isComplete(self, write=True):
         # If there is at least one block Free|Pending -> Piece not complete -> return false
@@ -120,12 +118,11 @@ class Piece(object):
         else:
             return False
 
-
-    def writeFunction(self,pathFile,data,offset):
+    def writeFunction(self, pathFile, data, offset):
         try:
-            f = open(pathFile,'r+b')
+            f = open(pathFile, 'r+b')
         except IOError:
-            f = open(pathFile,'wb')
+            f = open(pathFile, 'wb')
         f.seek(offset)
         f.write(data)
         f.close()
@@ -136,21 +133,17 @@ class Piece(object):
             fileOffset = f["fileOffset"]
             pieceOffset = f["pieceOffset"]
             length = f["length"]
-
             self.writeFunction(pathFile, self.pieceData[pieceOffset: pieceOffset + length], fileOffset)
-
 
     def assembleData(self):
         buf = b""
         for block in self.blocks:
-            buf+=block[2]
+            buf += block[2]
         return buf
 
-    def isHashPieceCorrect(self,data):
+    def isHashPieceCorrect(self, data):
         if utils.sha1_hash(data) == self.pieceHash:
             return True
         else:
-            #logging.warning("Error Piece Hash")
-            #logging.debug("{0} : {1}".format(utils.sha1_hash(data), self.pieceHash))
             self.initBlocks()
             return False

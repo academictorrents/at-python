@@ -9,20 +9,19 @@ class HttpPeer(object):
         self.torrent = torrent
         self.handshake(url)
 
-
     def handshake(self, url):
         if not url:
             raise Exception
         resp = requests.head(url)
-        if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False): # if it was a full-url
+        if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False):  # if it was a full-url
             self.url = '/'.join(url.split('/')[0:-1]) + '/'
             self.etag = resp.headers.get('etag', None)
-        elif url[-1] == '/': #maybe we need to construct a full-url
+        elif url[-1] == '/':  # maybe we need to construct a full-url
             directory = self.torrent.torrentFile.get('info', {}).get('name')
             some_filename = self.torrent.torrentFile.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
             compound_url = url + directory + '/' + some_filename
             resp = requests.head(compound_url)
-            if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False): # if it wasn't a full-url
+            if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False):  # if it wasn't a full-url
                 self.url = url + directory + '/'
                 self.etag = resp.headers.get('etag', None)
             else:
@@ -64,7 +63,6 @@ class HttpPeer(object):
             resp = requests.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)})
             responses[filename] = (resp, start)
         return responses
-
 
     def publish_responses(self, responses, pieces_by_file):
         unique_pieces = set()

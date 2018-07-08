@@ -73,7 +73,7 @@ class Tracker(object):
                 continue
             elif tracker[0][:4] == "http":
                 event = "finished" if remaining == 0 else "stopped"
-                version = pkg_resources.require("AcademicTorrents")[0].version
+                version = pkg_resources.get_distribution("academictorrents").version
                 params = {
                     'info_hash': self.torrent.info_hash,
                     'peer_id': self.torrent.peer_id,
