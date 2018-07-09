@@ -1,7 +1,7 @@
 
 
 import academictorrents as at
-import cPickle
+import pickle
 import gzip
 import sys
 import os
@@ -15,5 +15,5 @@ filename = at.get("323a0048d87ca79b68f12a6350a57776b6a3b7fb")
 print("About to open the file")
 
 mnist = gzip.open(filename, 'rb')
-train_set, validation_set, test_set = cPickle.load(mnist)
+train_set, validation_set, test_set = pickle.load(mnist)
 mnist.close()

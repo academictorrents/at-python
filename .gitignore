@@ -95,7 +95,7 @@ ENV/
 .idea
 *.torrent
 torrents_data/
-.torrent_timestamps.json
+torrent_timestamps.json
 
 #Mac
 .DS_Store
