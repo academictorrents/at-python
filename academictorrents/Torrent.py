@@ -69,7 +69,7 @@ class Torrent(object):
         return contents
 
     def get_files(self):
-        root = self.torrent_dir + self.torrentFile['info']['name'] #+ "/"
+        root = self.torrent_dir + self.torrentFile['info']['name']  # + "/"
         if 'files' in self.torrentFile['info']:
             if not os.path.exists(root):
                 os.mkdir(root, 0o766)
@@ -80,19 +80,19 @@ class Torrent(object):
                 if not os.path.exists(os.path.dirname(pathFile)):
                     os.makedirs(os.path.dirname(pathFile))
 
-                self.fileNames.append({"path": pathFile , "length": f["length"]})
+                self.fileNames.append({"path": pathFile, "length": f["length"]})
                 self.totalLength += f["length"]
 
         else:
-            self.fileNames.append({"path": root , "length": self.torrentFile['info']['length']})
+            self.fileNames.append({"path": root, "length": self.torrentFile['info']['length']})
             self.totalLength = self.torrentFile['info']['length']
 
     def getTrakers(self):
         if 'announce-list' in self.torrentFile:
             return self.torrentFile['announce-list']
         else:
-            return [[ self.torrentFile['announce'] ]]
+            return [[self.torrentFile['announce']]]
 
     def generate_peer_id(self):
         seed = str(time.time())
-        return "AT-" + utils.sha1_hash(seed.encode())
+        return "AT-" + str(utils.sha1_hash(seed.encode()))
