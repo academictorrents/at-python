@@ -8,7 +8,7 @@ import random
 import socket
 import threading
 import time
-import academictorrents as at
+from . import __version__
 # Python 2 and 3: alternative 4
 try:
     from urllib.parse import urlparse
@@ -69,7 +69,7 @@ class Tracker(object):
             pass
 
     def stop_message(self, downloaded, remaining):
-        resp = {"status_code": 0}
+        resp = requests.models.Response()
         if downloaded == 0:
             return True
         for tracker in self.torrent.announceList:
@@ -87,10 +87,8 @@ class Tracker(object):
                     'port': 6881
                 }
                 try:
-                    resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + at.__version__ + " " + requests.utils.default_user_agent()})
-                    print(at.__version__)
+                    resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
-                    print(e)
                     pass
             return params, resp
 
