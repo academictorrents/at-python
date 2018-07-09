@@ -69,6 +69,7 @@ class Tracker(object):
             pass
 
     def stop_message(self, downloaded, remaining):
+        resp = ""
         if downloaded == 0:
             return True
         for tracker in self.torrent.announceList:
