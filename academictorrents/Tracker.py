@@ -8,7 +8,7 @@ import random
 import socket
 import threading
 import time
-from . import __version__
+from .version import __version__
 # Python 2 and 3: alternative 4
 try:
     from urllib.parse import urlparse
