@@ -95,4 +95,4 @@ class Torrent(object):
 
     def generate_peer_id(self):
         seed = str(time.time())
-        return "AT-" + str(utils.sha1_hash(seed.encode()))
+        return utils.sha1_hash(seed.encode())
