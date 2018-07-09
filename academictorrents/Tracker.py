@@ -69,7 +69,7 @@ class Tracker(object):
             pass
 
     def stop_message(self, downloaded, remaining):
-        resp = ""
+        resp = {"status_code": 0}
         if downloaded == 0:
             return True
         for tracker in self.torrent.announceList:
@@ -88,7 +88,9 @@ class Tracker(object):
                 }
                 try:
                     resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + at.__version__ + " " + requests.utils.default_user_agent()})
-                except Exception:
+                    print(at.__version__)
+                except Exception as e:
+                    print(e)
                     pass
             return params, resp
 
