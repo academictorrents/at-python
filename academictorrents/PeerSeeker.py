@@ -12,7 +12,7 @@ class PeerSeeker(Thread):
         self.stopRequested = False
         self.newpeersQueue = newpeersQueue
         self.torrent = torrent
-        self.peerFailed = [("","")]
+        self.peerFailed = [("", "")]
         self.setDaemon(True)
 
     def requestStop(self):
