@@ -95,9 +95,8 @@ class Piece(object):
             f_ptr.close()
             block_offset += f['length']
         if self.isHashPieceCorrect(data):
-            for block in range(self.num_blocks):
-                self.finished = True
-                data = b''
+            self.finished = True
+            data = b''
 
     def isComplete(self, write=True):
         # If there is at least one block Free|Pending -> Piece not complete -> return false
