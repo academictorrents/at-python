@@ -26,6 +26,7 @@ class Client(object):
 
         self.torrent = Torrent.Torrent(self.hash, self.torrent_dir)
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
+
         self.piecesManager = PiecesManager.PiecesManager(self.torrent)
         self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.peersManager = PeersManager.PeersManager(self.torrent, self.piecesManager)
@@ -39,10 +40,7 @@ class Client(object):
         self.piecesManager.start()
         logging.info("Pieces-manager Started")
 
-        self.piecesManager.check_disk_pieces()
-
-    def start(self):
-        starting_size = self.check_percent_finished()
+    def start(self, starting_size):
         new_size = starting_size
         old_size = 0
         while not self.piecesManager.are_pieces_completed():
@@ -69,7 +67,7 @@ class Client(object):
                     responses = httpPeer.request_ranges(pieces_by_file)
                     httpPeer.publish_responses(responses, pieces_by_file)
 
-            new_size = self.check_percent_finished()
+            new_size = self.piecesManager.check_percent_finished()
             if new_size == old_size:
                 continue
 
@@ -93,11 +91,3 @@ class Client(object):
             if(int(time.time()) - block[3]) > 8 and block[0] == "Pending":
                 block[0] = "Free"
                 block[3] = 0
-
-    def check_percent_finished(self):
-        b = 0
-        for i in range(self.piecesManager.numberOfPieces):
-            for j in range(self.piecesManager.pieces[i].num_blocks):
-                if self.piecesManager.pieces[i].blocks[j][0] == "Full":
-                    b += len(self.piecesManager.pieces[i].blocks[j][2])
-        return b

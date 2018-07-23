@@ -26,12 +26,19 @@ class PiecesManager(Thread):
         pub.subscribe(self.receive_block_piece, 'PiecesManager.Piece')
         pub.subscribe(self.update_bit_field, 'PiecesManager.PieceCompleted')
 
+    def check_percent_finished(self):
+        b = 0
+        for i in range(self.numberOfPieces):
+            for j in range(self.pieces[i].num_blocks):
+                if self.pieces[i].blocks[j][0] == "Full":
+                    b += len(self.pieces[i].blocks[j][2])
+        return b
 
     def check_disk_pieces(self):
         for piece in self.pieces:
-            piece.isCompleteOnDisk() # this should set all the finished bools on the finished pieces
+            piece.isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
 
-    def update_bit_field(self,pieceIndex):
+    def update_bit_field(self, pieceIndex):
         self.bitfield[pieceIndex] = 1
 
     def receive_block_piece(self,piece):
