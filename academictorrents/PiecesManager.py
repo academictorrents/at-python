@@ -29,10 +29,10 @@ class PiecesManager(Thread):
     def check_percent_finished(self):
         b = 0
         for i in range(self.numberOfPieces):
-            for j in range(self.pieces[i].num_blocks):
-                if self.pieces[i].blocks[j][0] == "Full":
-                    b += len(self.pieces[i].blocks[j][2])
+            if self.pieces[i].finished:
+                b += self.pieces[i].pieceSize
         return b
+
 
     def check_disk_pieces(self):
         for piece in self.pieces:
