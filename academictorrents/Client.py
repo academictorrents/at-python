@@ -19,7 +19,7 @@ from . import utils
 
 class Client(object):
     @classmethod
-    def __init__(self, hash, torrent_dir):
+    def __init__(self, hash, torrent_dir, piecesManager):
         newpeersQueue = Queue()
         self.hash = hash
         self.torrent_dir = torrent_dir
@@ -27,7 +27,7 @@ class Client(object):
         self.torrent = Torrent.Torrent(self.hash, self.torrent_dir)
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
 
-        self.piecesManager = PiecesManager.PiecesManager(self.torrent)
+        self.piecesManager = piecesManager
         self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.peersManager = PeersManager.PeersManager(self.torrent, self.piecesManager)
 

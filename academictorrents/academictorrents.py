@@ -26,4 +26,4 @@ def get(hash, datastore=None, name=None):
     if float(new_size) / torrent.totalLength == 1.0:
         return torrent_dir + torrent.torrentFile['info']['name']
 
-    Client(hash, torrent_dir).start(new_size)
+    Client(hash, torrent_dir, piecesManager).start(new_size)
