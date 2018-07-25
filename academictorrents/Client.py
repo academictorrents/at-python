@@ -45,7 +45,12 @@ class Client(object):
         old_size = 0
         while not self.piecesManager.are_pieces_completed():
             if len(self.peersManager.unchokedPeers) > 0:
+                MAX_PIECES_TO_REQ = 20
+                pieces_requested = 0
                 for piece in self.piecesManager.pieces:
+                    if pieces_requested > MAX_PIECES_TO_REQ:
+                        continue
+                    pieces_requested += 1
                     if not piece.finished:
                         pieceIndex = piece.pieceIndex
 
