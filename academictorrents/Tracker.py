@@ -92,6 +92,28 @@ class Tracker(object):
                     pass
             return params, resp
 
+    def downloading_message(self, downloaded, remaining):
+        resp = requests.models.Response()
+        if downloaded == 0:
+            return True
+        for tracker in self.torrent.announceList:
+            if tracker[0] == '':
+                continue
+            elif tracker[0][:4] == "http":
+                params = {
+                    'info_hash': self.torrent.info_hash,
+                    'peer_id': self.torrent.peer_id,
+                    'uploaded': 0,
+                    'downloaded': downloaded,
+                    'left': remaining,
+                    'port': 6881
+                }
+                try:
+                    resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                except Exception as e:
+                    pass
+            return params, resp
+
     def make_connection_id_request(self):
         conn_id = struct.pack('>Q', 0x41727101980)
         action = struct.pack('>I', 0)

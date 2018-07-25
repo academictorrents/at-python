@@ -73,10 +73,11 @@ class Client(object):
 
             old_size = new_size
             print("# Peers:", len(self.peersManager.unchokedPeers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
+            downloaded = new_size - starting_size
+            remaining = self.torrent.totalLength - (starting_size + downloaded)
+            self.tracker.downloading_message(downloaded, remaining)
 
             time.sleep(0.1)
-        downloaded = new_size - starting_size
-        remaining = self.torrent.totalLength - (starting_size + downloaded)
         self.tracker.stop_message(downloaded, remaining)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
