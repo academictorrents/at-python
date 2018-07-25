@@ -61,7 +61,7 @@ class Tracker(object):
             'port': 6881
         }
         try:
-            answerTracker = requests.get(tracker, params=params, timeout=20)
+            answerTracker = requests.get(tracker, params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
             lstPeers = bencode.decode(answerTracker.content)
             for peer in lstPeers['peers']:
                 self.newpeersQueue.put([peer['ip'], peer['port']])
