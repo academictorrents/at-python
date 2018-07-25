@@ -17,7 +17,7 @@ def get(hash, datastore=None, name=None):
     torrent = Torrent(hash, torrent_dir)
 
     timestamp = utils.read_timestamp(hash)
-    if utils.timestamp_is_recent(timestamp) and utils.filenames_present(torrent, datastore):
+    if utils.timestamp_is_within_30_days(timestamp) and utils.filenames_present(torrent, datastore):
         return torrent_dir + torrent.torrentFile['info']['name']
 
     piecesManager = PiecesManager(torrent)

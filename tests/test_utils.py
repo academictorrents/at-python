@@ -52,15 +52,15 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertTrue(isinstance(timestamp, int))
 
     def test_check_timestamp_now(self):
-        ret = utils.timestamp_is_recent(int(datetime.datetime.now().strftime("%s")))
+        ret = utils.timestamp_is_within_30_days(int(datetime.datetime.now().strftime("%s")))
         self.assertTrue(ret)
 
     def test_check_timestamp_two_weeks(self):
-        ret = utils.timestamp_is_recent(int(datetime.datetime.now().strftime("%s")) - 86400 * 14)
+        ret = utils.timestamp_is_within_30_days(int(datetime.datetime.now().strftime("%s")) - 86400 * 14)
         self.assertTrue(ret)
 
     def test_check_timestamp_2_months(self):
-        ret = utils.timestamp_is_recent(int(datetime.datetime.now().strftime("%s")) - 86400 * 60)
+        ret = utils.timestamp_is_within_30_days(int(datetime.datetime.now().strftime("%s")) - 86400 * 60)
         self.assertFalse(ret)
 
     def test_filename_checker(self):

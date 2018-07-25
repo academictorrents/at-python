@@ -7,7 +7,9 @@ import struct
 import random
 import socket
 import threading
+import datetime
 import time
+from . import utils
 from .version import __version__
 # Python 2 and 3: alternative 4
 try:
@@ -32,6 +34,7 @@ class Tracker(object):
         self.lstThreads = []
         self.newpeersQueue = newpeersQueue
         self.getPeersFromTrackers()
+        self.last_message_time = int(datetime.datetime.now().strftime("%s"))
 
     def getPeersFromTrackers(self):
         for tracker in self.torrent.announceList:
@@ -93,6 +96,9 @@ class Tracker(object):
             return params, resp
 
     def downloading_message(self, downloaded, remaining):
+        if utils.timestamp_is_within_10_seconds(self.last_message_time):
+            return
+        self.last_message_time = int(datetime.datetime.now().strftime("%s"))
         resp = requests.models.Response()
         if downloaded == 0:
             return True
