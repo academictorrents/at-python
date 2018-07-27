@@ -133,6 +133,8 @@ class Piece(object):
             length = f["length"]
             self.writeFunction(pathFile, self.pieceData[pieceOffset: pieceOffset + length], fileOffset)
         self.pieceData = b''
+        for block in self.blocks:
+            block[2] = ''
 
     def assembleData(self):
         buf = b""
