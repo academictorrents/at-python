@@ -62,7 +62,7 @@ class HttpPeer(object):
             end = start
             for piece in pieces:
                 end += piece.get_file_length(filename)
-            resp = requests.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)})
+            resp = requests.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False)
             responses[filename] = (resp, start)
         return responses
 
