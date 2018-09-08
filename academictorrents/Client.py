@@ -47,29 +47,31 @@ class Client(object):
             if len(self.peersManager.unchokedPeers) > 0:
                 MAX_PIECES_TO_REQ = 20
                 pieces_requested = 0
-                for piece in self.piecesManager.pieces:
+                unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
+                for piece in unfinished_pieces:
                     if pieces_requested > MAX_PIECES_TO_REQ:
                         continue
                     pieces_requested += 1
-                    if not piece.finished:
-                        pieceIndex = piece.pieceIndex
+                    peer = self.peersManager.getUnchokedPeer(piece.pieceIndex)
+                    if not peer:
+                        continue
 
-                        peer = self.peersManager.getUnchokedPeer(pieceIndex)
-                        if not peer:
-                            continue
+                    data = piece.getEmptyBlock()
+                    if data:
+                        index, offset, length = data
+                        self.peersManager.requestNewPiece(peer, index, offset, length)
 
-                        data = self.piecesManager.pieces[pieceIndex].getEmptyBlock()
-                        if data:
-                            index, offset, length = data
-                            self.peersManager.requestNewPiece(peer, index, offset, length)
-
-                        piece.isComplete()
-                        self.reset_pending_blocks(piece)
+                    piece.isComplete()
+                    self.reset_pending_blocks(piece)
             if len(self.peersManager.httpPeers) > 0:
                 for httpPeer in self.peersManager.httpPeers:
                     pieces = httpPeer.get_pieces(self.piecesManager)
                     pieces_by_file = httpPeer.construct_pieces_by_file(pieces)  # set all those blocks to Pending
                     responses = httpPeer.request_ranges(pieces_by_file)
+                    codes = [response[0].status_code for response in responses.values()]
+                    if any(code != 206 for code in codes):
+                        self.peersManager.httpPeers.remove(httpPeer)
+                        continue
                     httpPeer.publish_responses(responses, pieces_by_file)
 
             new_size = self.piecesManager.check_percent_finished()

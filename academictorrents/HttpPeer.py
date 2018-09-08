@@ -13,19 +13,21 @@ class HttpPeer(object):
         if not url:
             raise Exception
         resp = requests.head(url)
-        if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False):  # if it was a full-url
+        if resp.headers.get('Accept-Ranges', False):  # if it was a full-url
             self.url = '/'.join(url.split('/')[0:-1]) + '/'
-            self.etag = resp.headers.get('etag', None)
-        elif url[-1] == '/':  # maybe we need to construct a full-url
+            return
+        else:  # maybe we need to construct a full-url
             directory = self.torrent.torrentFile.get('info', {}).get('name')
             some_filename = self.torrent.torrentFile.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
-            compound_url = url + directory + '/' + some_filename
-            resp = requests.head(compound_url)
-            if resp.headers.get('Accept-Ranges', False) and resp.headers.get('ETag', False):  # if it wasn't a full-url
-                self.url = url + directory + '/'
-                self.etag = resp.headers.get('etag', None)
+            if url[-1] == '/':
+                compound_url = url + directory + '/'
             else:
-                raise Exception
+                compound_url = url + '/' + directory + '/'
+            resp = requests.head(compound_url + some_filename)
+            if resp.headers.get('Accept-Ranges', False):  # if it wasn't a full-url
+                self.url = compound_url
+                return
+        raise Exception  # if we don't hit either of the above returns, we should raise an exception.
 
     def get_pieces(self, piecesManager):
         # TODO: Add another way to exit this loop when we don't hit the max size

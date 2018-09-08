@@ -83,8 +83,8 @@ class PiecesManager(Thread):
 
                 if currentSizeFile - pieceSize < 0:
                     file = {"length": currentSizeFile,"idPiece":idPiece ,"fileOffset":fileOffset, "pieceOffset":pieceSizeUsed ,"path":f["path"]}
-                    pieceOffset +=  currentSizeFile
-                    fileOffset +=  currentSizeFile
+                    pieceOffset += currentSizeFile
+                    fileOffset += currentSizeFile
                     pieceSizeUsed += currentSizeFile
                     currentSizeFile = 0
 
