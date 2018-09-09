@@ -5,7 +5,7 @@ import bitstring
 import logging
 from threading import Thread
 from pubsub import pub
-from progress_bar import print_progress
+from . import progress_bar
 
 
 class PiecesManager(Thread):
@@ -37,9 +37,9 @@ class PiecesManager(Thread):
     def check_disk_pieces(self):
         for index, piece in enumerate(self.pieces):
             if index % 50 == 0:
-                print_progress(index, self.numberOfPieces - 1, "Checking Disk Pieces:", " finished")
+                progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking Disk Pieces:", " finished")
             piece.isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
-        print_progress(index, self.numberOfPieces - 1, "Checking Disk Pieces:", " finished")
+        progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking Disk Pieces:", " finished")
 
     def update_bit_field(self, pieceIndex):
         self.bitfield[pieceIndex] = 1
