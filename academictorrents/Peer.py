@@ -1,5 +1,6 @@
 __author__ = 'alexisgallepe'
 
+import sys
 import socket
 import struct
 import bitstring
@@ -32,20 +33,17 @@ class Peer(object):
             'peer_interested': False,
         }
         self.idFunction = {
-            0: self.choke,
-            1: self.unchoke,
-            2: self.interested,
-            3: self.not_interested,
-            4: self.have,
-            5: self.bitfield,
-            6: self.request,
-            7: self.piece,
-            8: self.cancel,
-            9: self.portRequest
+            0: self.interested,
+            1: self.not_interested,
+            2: self.have,
+            3: self.bitfield,
+            4: self.request,
+            5: self.piece,
+            6: self.cancel,
+            7: self.portRequest
         }
 
         self.numberOfPieces = torrent.numberOfPieces
-
         self.bitField = bitstring.BitArray(self.numberOfPieces)
 
     def connectToPeer(self, timeout=10):
@@ -55,7 +53,7 @@ class Peer(object):
             self.build_handshake()
             return True
         except Exception:
-            print("connectToPeer Socket Timeout Error")
+            print(str(self.ip) + ": connectToPeer Socket Timeout Error")
 
         return False
 
@@ -113,9 +111,7 @@ class Peer(object):
         try:
             self.socket.send(msg)
         except Exception as e:
-            print("sendToPeer Error: ")
-            print(self.ip)
-            print(e)
+            print(str(self.ip) + ": sendToPeer Error: " + str(e))
 
     def checkHandshake(self, buf, pstr="BitTorrent protocol"):
         if isinstance(buf, (bytes, bytearray)):
@@ -147,17 +143,6 @@ class Peer(object):
             pass
 
         return False
-
-    def choke(self, payload=None):
-        logging.info('choke')
-        print("choking peer: " + self.ip)
-        self.state['peer_choking'] = True
-
-    def unchoke(self, payload=None):
-        logging.info('unchoke')
-        print("Unchoking peer: " + self.ip)
-        pub.sendMessage('PeersManager.peerUnchoked', peer=self)
-        self.state['peer_choking'] = False
 
     def interested(self, payload=None):
         logging.info('interested')

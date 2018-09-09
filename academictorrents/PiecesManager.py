@@ -13,7 +13,7 @@ class PiecesManager(Thread):
         Thread.__init__(self)
         self.torrent = torrent
         self.piecesCompleted = False
-
+        
         self.numberOfPieces = torrent.numberOfPieces
         self.bitfield = bitstring.BitArray(self.numberOfPieces)
         self.pieces = self.generate_pieces()

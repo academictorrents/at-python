@@ -15,7 +15,6 @@ class PeersManager(Thread):
     def __init__(self, torrent, piecesManager):
         Thread.__init__(self)
         self.peers = []
-        self.unchokedPeers = []
         self.httpPeers = []
         self.torrent = torrent
         self.piecesManager = piecesManager
@@ -37,10 +36,7 @@ class PeersManager(Thread):
 
         # Events
         pub.subscribe(self.addPeer, 'PeersManager.newPeer')
-        pub.subscribe(self.addUnchokedPeer, 'PeersManager.peerUnchoked')
-        pub.subscribe(self.handlePeerRequests, 'PeersManager.PeerRequestsPiece')
         pub.subscribe(self.peersBitfield, 'PeersManager.updatePeersBitfield')
-        pub.subscribe(self.chokePeer, 'PeersManager.chokePeer')
 
     def requestStop(self):
         self.stopRequested = True
@@ -55,8 +51,8 @@ class PeersManager(Thread):
                 self.piecesByPeer[i][1].append(peer)
                 self.piecesByPeer[i][0] = len(self.piecesByPeer[i][1])
 
-    def getUnchokedPeer(self, index):
-        for peer in self.unchokedPeers:
+    def getPeer(self, index):
+        for peer in self.peers:
             if isinstance(peer, HttpPeer.HttpPeer) or (isinstance(peer, Peer.Peer) and peer.hasPiece(index)):
                 return peer
         return False
@@ -73,15 +69,15 @@ class PeersManager(Thread):
                 try:
                     msg = socket.recv(1024)
                 except Exception as e:
-                    print("peersManager socket.recv error: ")
-                    print(e)
-                    print("removing peer: " + peer.ip)
+                    print(peer.ip + ": removing peer because of: " + e)
                     self.removePeer(peer)
+                    print("new number of peers: " + str(len(self.peers)))
                     continue
 
                 if len(msg) == 0:
-                    print("length of message received in peersmanager was 0 -- removing peer: " + peer.ip)
+                    print(peer.ip + ": removing peer because we received a message of 0 length")
                     self.removePeer(peer)
+                    print("new number of peers: " + str(len(self.peers)))
                     continue
 
                 peer.readBuffer += msg
@@ -97,20 +93,12 @@ class PeersManager(Thread):
                         interested = peer.build_interested()
                         peer.sendToPeer(interested)
                     except Exception as e:
-                        print("startConnectToPeers Error: ")
-                        print(e)
-                        print("removing peer: " + peer.ip)
+                        print(peer.ip + ": removing peer because of: " + e)
                         self.removePeer(peer)
+                        print("new number of peers: " + str(len(self.peers)))
 
     def addPeer(self, peer):
         self.peers.append(peer)
-
-    def addUnchokedPeer(self, peer):
-        self.unchokedPeers.append(peer)
-
-    def chokePeer(self, peer):
-        self.unchokedPeers = [x for x in self.unchokedPeers if not hasattr(x, 'url') or (hasattr(x, 'url') and x.url != peer.url)]
-        Timer(.005, self.addUnchokedPeer, [peer]).start()
 
     def removePeer(self, peer):
         if peer in self.peers:
@@ -121,8 +109,8 @@ class PeersManager(Thread):
 
             self.peers.remove(peer)
 
-        if peer in self.unchokedPeers:
-            self.unchokedPeers.remove(peer)
+        if peer in self.peers:
+            self.peers.remove(peer)
 
         for rarestPiece in self.rarestPieces.rarestPieces:
             if peer in rarestPiece["peers"]:
@@ -134,12 +122,6 @@ class PeersManager(Thread):
                 return peer
 
         raise ("peer not present in PeerList")
-
-    def handlePeerRequests(self, piece, peer):
-        piece_index, block_offset, block_length = piece
-        block = self.piecesManager.get_block(piece_index, block_offset, block_length)
-        piece = peer.build_request(self, piece_index, block_offset, block)
-        peer.sendToPeer(piece)
 
     def manageMessageReceived(self, peer):
         while len(peer.readBuffer) > 0:

@@ -26,7 +26,6 @@ def get(hash, datastore=None, name=None):
         new_size = piecesManager.check_percent_finished()
         if float(new_size) / torrent.totalLength == 1.0:
             return torrent_dir + torrent.torrentFile['info']['name']
-
         return Client(hash, torrent_dir, piecesManager).start(new_size)
     else:
         return hash

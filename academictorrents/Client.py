@@ -26,7 +26,6 @@ class Client(object):
 
         self.torrent = Torrent.Torrent(self.hash, self.torrent_dir)
         self.tracker = Tracker.Tracker(self.torrent, newpeersQueue)
-
         self.piecesManager = piecesManager
         self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.peersManager = PeersManager.PeersManager(self.torrent, self.piecesManager)
@@ -44,7 +43,7 @@ class Client(object):
         new_size = starting_size
         old_size = 0
         while not self.piecesManager.are_pieces_completed():
-            if len(self.peersManager.unchokedPeers) > 0:
+            if len(self.peersManager.peers) > 0:
                 MAX_PIECES_TO_REQ = 20
                 pieces_requested = 0
                 unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
@@ -52,7 +51,7 @@ class Client(object):
                     if pieces_requested > MAX_PIECES_TO_REQ:
                         continue
                     pieces_requested += 1
-                    peer = self.peersManager.getUnchokedPeer(piece.pieceIndex)
+                    peer = self.peersManager.getPeer(piece.pieceIndex)
                     if not peer:
                         continue
 
@@ -79,7 +78,7 @@ class Client(object):
                 continue
 
             old_size = new_size
-            print("# Peers:", len(self.peersManager.unchokedPeers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
+            print("# Peers:", len(self.peersManager.peers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
             downloaded = new_size - starting_size
             remaining = self.torrent.totalLength - (starting_size + downloaded)
             self.tracker.downloading_message(downloaded, remaining)
