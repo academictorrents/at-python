@@ -14,6 +14,7 @@ setup(
     long_description=readme,
     author='Martin Weiss, Alexis Gallepe, Jonathan Nogueira',
     author_email='contact@academictorrents.com',
+    data_files = [("", ["LICENSE"])],
     url='https://github.com/AcademicTorrents/python-r-api',
     classifiers=(
         "Programming Language :: Python :: 2.6"
@@ -33,7 +34,7 @@ setup(
         'bencode.py==2.0.0',
         'bitstring==3.1.5',
         'PyPubSub==3.3.0',
-        'requests==2.7.0',
+        'requests==2.19.1',
         'future==0.16.0'
     ]
 )

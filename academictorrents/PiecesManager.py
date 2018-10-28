@@ -13,7 +13,7 @@ class PiecesManager(Thread):
         Thread.__init__(self)
         self.torrent = torrent
         self.piecesCompleted = False
-        
+
         self.numberOfPieces = torrent.numberOfPieces
         self.bitfield = bitstring.BitArray(self.numberOfPieces)
         self.pieces = self.generate_pieces()
@@ -37,9 +37,9 @@ class PiecesManager(Thread):
     def check_disk_pieces(self):
         for index, piece in enumerate(self.pieces):
             if index % 50 == 0:
-                progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking Disk Pieces:", " finished")
+                progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking for pieces on disk:", " finished")
             piece.isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
-        progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking Disk Pieces:", " finished")
+        progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking for pieces on disk:", " finished")
 
     def update_bit_field(self, pieceIndex):
         self.bitfield[pieceIndex] = 1
