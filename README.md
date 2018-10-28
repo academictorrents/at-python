@@ -1,4 +1,4 @@
-# Academic Torrents Python and R APIs (Under Development)
+# Academic Torrents Python API
 
 [![Build Status](https://travis-ci.org/AcademicTorrents/at-python.svg?branch=master)](https://travis-ci.org/AcademicTorrents/at-python)
 [![codecov](https://codecov.io/gh/AcademicTorrents/at-python/branch/master/graph/badge.svg)](https://codecov.io/gh/AcademicTorrents/python-r-api)
@@ -24,3 +24,4 @@ mnist = gzip.open(filename, 'rb')
 train_set, validation_set, test_set = cPickle.load(mnist)
 mnist.close()
 ```
+More documentation will be released soon!
