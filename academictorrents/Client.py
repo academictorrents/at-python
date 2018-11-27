@@ -56,6 +56,7 @@ class Client(object):
                         continue
 
                     data = piece.getEmptyBlock()
+
                     if data:
                         index, offset, length = data
                         self.peersManager.requestNewPiece(peer, index, offset, length)
@@ -90,7 +91,7 @@ class Client(object):
 
         if remaining == 0:
             utils.write_timestamp(self.hash)
-
+        print("Download Complete!")
         return self.torrent_dir + self.torrent.torrentFile['info']['name']
 
     def reset_pending_blocks(self, piece):

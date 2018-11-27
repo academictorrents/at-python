@@ -2,6 +2,7 @@ __author__ = 'alexisgallepe'
 
 import time
 from . import Peer
+import logging
 from threading import Thread
 from pubsub import pub
 
@@ -26,5 +27,5 @@ class PeerSeeker(Thread):
                 if not p.connectToPeer(3):
                     self.peerFailed.append((peer[0], peer[1]))
                 else:
-                    print(p.ip + ": added new peer")
+                    logging.info(p.ip + ": added new peer")
                     pub.sendMessage('PeersManager.newPeer', peer=p)

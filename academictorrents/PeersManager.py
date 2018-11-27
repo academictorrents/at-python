@@ -1,14 +1,13 @@
 __author__ = 'alexisgallepe'
 
 import select
-import struct
-from threading import Thread, Timer
+import time
 from . import utils
+import logging
+from threading import Thread
 from pubsub import pub
 from . import RarestPieces
-import logging
 from . import HttpPeer, Peer
-import time
 
 
 class PeersManager(Thread):
@@ -69,17 +68,16 @@ class PeersManager(Thread):
                 try:
                     msg = socket.recv(1024)
                 except Exception as e:
-                    print(peer.ip + ": removing peer because of: " + e)
+                    logging.info(peer.ip + ": removing peer because of: " + str(e))
                     self.removePeer(peer)
-                    print("new number of peers: " + str(len(self.peers)))
+                    logging.info("new number of peers: " + str(len(self.peers)))
                     continue
 
                 if len(msg) == 0:
-                    print(peer.ip + ": removing peer because we received a message of 0 length")
+                    logging.error(peer.ip + ": removing peer because we received a message of 0 length")
                     self.removePeer(peer)
-                    print("new number of peers: " + str(len(self.peers)))
+                    logging.info("new number of peers: " + str(len(self.peers)))
                     continue
-
                 peer.readBuffer += msg
                 self.manageMessageReceived(peer)
 
@@ -93,9 +91,9 @@ class PeersManager(Thread):
                         interested = peer.build_interested()
                         peer.sendToPeer(interested)
                     except Exception as e:
-                        print(peer.ip + ": removing peer because of: " + e)
+                        logging.error(peer.ip + ": removing peer because of: " + e)
                         self.removePeer(peer)
-                        print("new number of peers: " + str(len(self.peers)))
+                        logging.info("new number of peers: " + str(len(self.peers)))
 
     def addPeer(self, peer):
         self.peers.append(peer)
@@ -130,7 +128,6 @@ class PeersManager(Thread):
                 return
 
             msgLength = utils.convertBytesToDecimal(peer.readBuffer[0:4])
-
             # handle keep alive
             if peer.keep_alive(peer.readBuffer):
                 return
@@ -151,7 +148,7 @@ class PeersManager(Thread):
             try:
                 peer.idFunction[msgCode](payload)
             except Exception as e:
-                logging.debug("error id:", msgCode, " ->", e)
+                logging.debug("error id: " + str(msgCode) +  " ->" + str(e))
                 return
 
     def requestNewPiece(self, peer, pieceIndex, blockOffset, length):

@@ -2,8 +2,6 @@ __author__ = 'alexisgallepe'
 
 import math
 import time
-import logging
-
 from . import utils
 from pubsub import pub
 

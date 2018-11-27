@@ -35,11 +35,14 @@ class PiecesManager(Thread):
         return b
 
     def check_disk_pieces(self):
+        num_finished = []
         for index, piece in enumerate(self.pieces):
             if index % 50 == 0:
                 progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking for pieces on disk:", " finished")
             piece.isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
+            num_finished.append(piece.finished)
         progress_bar.print_progress(index, self.numberOfPieces - 1, "Checking for pieces on disk:", " finished")
+        print("Found " + str(sum(num_finished)) + " finished pieces out of " + str(len(num_finished)) + " total pieces.")
 
     def update_bit_field(self, pieceIndex):
         self.bitfield[pieceIndex] = 1
