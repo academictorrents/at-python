@@ -18,7 +18,6 @@ class PiecesManager(Thread):
         self.bitfield = bitstring.BitArray(self.numberOfPieces)
         self.pieces = self.generate_pieces()
         self.files = self.get_files()
-
         for file in self.files:
             idPiece = file['idPiece']
             self.pieces[idPiece].files.append(file)

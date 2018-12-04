@@ -16,15 +16,17 @@ except ImportError:
 
 
 class Torrent(object):
-    def __init__(self, hash, torrent_dir):
+    def __init__(self, hash, data_dir):
         self.hash = hash
-        self.torrent_dir = torrent_dir
+        self.data_dir = data_dir
+        if not os.path.isdir(self.data_dir):
+            os.makedirs(self.data_dir)
+
         if not self.get_from_url() and not self.get_from_file():
-            raise Exception("Could not find a torrent with this hash on the tracker or in the torrent directory:" + str(self.torrent_dir))
+            raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.data_dir))
 
-        with open(torrent_dir + hash + '.torrent', 'rb') as file:
+        with open("/tmp/" + hash + '.torrent', 'rb') as file:
             contents = file.read()
-
         self.torrentFile = bencode.decode(contents)
         self.totalLength = 0
         self.pieceLength = self.torrentFile['info']['piece length']
@@ -49,7 +51,7 @@ class Torrent(object):
 
     def get_from_file(self):
         try:
-            torrent_path = os.path.join(self.torrent_dir, self.hash + '.torrent')
+            torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
             return bencode.decode(open(torrent_path, 'rb').read())
         except Exception:
             return False
@@ -58,9 +60,7 @@ class Torrent(object):
         contents = None
         try:
             url = "http://academictorrents.com/download/" + self.hash
-            torrent_path = os.path.join(self.torrent_dir, self.hash + '.torrent')
-            if not os.path.isdir(self.torrent_dir):
-                os.makedirs(self.torrent_dir)
+            torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
             response = urlopen(url).read()
             open(torrent_path, 'wb').write(response)
             contents = bencode.decode(open(torrent_path, 'rb').read())
@@ -69,7 +69,7 @@ class Torrent(object):
         return contents
 
     def get_files(self):
-        root = self.torrent_dir + self.torrentFile['info']['name']  # + "/"
+        root = self.data_dir + self.torrentFile['info']['name']  # + "/"
         if 'files' in self.torrentFile['info']:
             if not os.path.exists(root):
                 os.mkdir(root, 0o766)

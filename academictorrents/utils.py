@@ -24,7 +24,7 @@ def sha1_hash(string):
 
 
 def get_timestamp_filename():
-    return os.getcwd() + "/torrent_timestamps.json"
+    return "/tmp/torrent_timestamps.json"
 
 
 def get_torrent_dir(datastore=None, name=None):
