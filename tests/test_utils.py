@@ -65,12 +65,12 @@ class UtilsTestSuite(unittest.TestCase):
 
     def test_filename_checker(self):
         torrent_dir = "./tests/"
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir=torrent_dir).get_from_file()
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", data_dir=torrent_dir).get_from_file()
         ret = utils.filenames_present(torrent, torrent_dir)
         self.assertFalse(ret)
 
     def test_filename_checker_true(self):
         torrent_dir = "./datastore/"
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir=torrent_dir).get_from_file()
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", data_dir=torrent_dir).get_from_file()
         ret = utils.filenames_present(torrent, torrent_dir)
         self.assertTrue(ret)
