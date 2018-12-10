@@ -12,6 +12,10 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
     def test_absolute_truth_and_meaning(self):
         assert True
 
+    def test_get_torrent_with_only_one_piece(self):
+        filename = at.get('4d563087fb327739d7ec9ee9a0d32c4cb8b0355e')
+        self.assertTrue(os.path.isfile(filename))
+
     def test_get_file_http(self):
         filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f')
         self.assertTrue(os.path.isfile(filename))
