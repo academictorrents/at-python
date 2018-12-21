@@ -15,7 +15,7 @@ from . import Torrent
 from . import Tracker
 from . import HttpPeer
 from . import utils
-
+from . import progress_bar
 
 class Client(object):
     @classmethod
@@ -42,6 +42,7 @@ class Client(object):
     def start(self, starting_size):
         new_size = starting_size
         old_size = 0
+        start_time = time.time()
         while not self.piecesManager.are_pieces_completed():
             if len(self.peersManager.peers) > 0:
                 MAX_PIECES_TO_REQ = 20
@@ -79,7 +80,10 @@ class Client(object):
                 continue
 
             old_size = new_size
-            print("# Peers:", len(self.peersManager.peers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
+            rate = start_time/new_size/1000 # rate in KBps
+            progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
+            #print("# Peers:", len(self.peersManager.peers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
+                                        
             downloaded = new_size - starting_size
             remaining = self.torrent.totalLength - (starting_size + downloaded)
             self.tracker.downloading_message(downloaded, remaining)
