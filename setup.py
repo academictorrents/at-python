@@ -34,7 +34,7 @@ setup(
         'bencode.py==2.0.0',
         'bitstring==3.1.5',
         'PyPubSub==3.3.0',
-        'requests==2.19.1',
+        'requests>=2.20.0',
         'future==0.16.0'
     ]
 )
