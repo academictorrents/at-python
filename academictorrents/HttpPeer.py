@@ -2,6 +2,8 @@ import requests
 from pubsub import pub
 from collections import defaultdict
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class HttpPeer(object):
     def __init__(self, torrent, url):
