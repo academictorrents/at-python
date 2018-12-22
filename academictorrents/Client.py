@@ -82,7 +82,6 @@ class Client(object):
             old_size = new_size
             rate = start_time/new_size/1000 # rate in KBps
             progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
-            #print("# Peers:", len(self.peersManager.peers), " # HTTPSeeds:", len(self.peersManager.httpPeers), " Completed: ", float((float(new_size) / self.torrent.totalLength)*100), "%")
                                         
             downloaded = new_size - starting_size
             remaining = self.torrent.totalLength - (starting_size + downloaded)
