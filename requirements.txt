@@ -4,3 +4,4 @@ PyPubSub == 3.3.0
 requests >= 2.19.0
 pytest == 3.2.5
 future == 0.16.0
+
