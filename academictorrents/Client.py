@@ -80,7 +80,7 @@ class Client(object):
                 continue
 
             old_size = new_size
-            rate = start_time/new_size/1000 # rate in KBps
+            rate = (new_size-starting_size)/(time.time()-start_time)/1000. # rate in KBps
             progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
                                         
             downloaded = new_size - starting_size
