@@ -30,6 +30,9 @@ class Client(object):
         self.peerSeeker = PeerSeeker.PeerSeeker(newpeersQueue, self.torrent)
         self.peersManager = PeersManager.PeersManager(self.torrent, self.piecesManager)
 
+        self.tracker.start()
+        logging.info("Tracker-manager Started")
+        
         self.peersManager.start()
         logging.info("Peers-manager Started")
 
@@ -95,6 +98,7 @@ class Client(object):
         downloaded = new_size - starting_size
         remaining = self.torrent.totalLength - (starting_size + downloaded)
         self.tracker.stop_message(downloaded, remaining)
+        self.tracker.requestStop()
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
         

@@ -37,4 +37,4 @@ class TrackerTestSuite(unittest.TestCase):
         remaining = 0
         params, resp = tracker.stop_message(downloaded, remaining)
         self.assertTrue(resp.status_code == 200)
-        self.assertTrue(params['event'] == 'finished')
+        self.assertTrue(params['event'] == 'completed')
