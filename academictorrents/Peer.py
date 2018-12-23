@@ -141,6 +141,7 @@ class Peer(object):
             keep_alive = struct.unpack("!I", payload[:4])[0]
             if keep_alive == 0:
                 logging.info('KEEP ALIVE')
+                time.sleep(1.0)
                 return True
         except Exception:
             pass
