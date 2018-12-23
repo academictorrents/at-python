@@ -79,7 +79,7 @@ class Tracker(object):
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
-                event = "finished" if remaining == 0 else "stopped"
+                event = "completed" if remaining == 0 else "stopped"
                 params = {
                     'info_hash': self.torrent.info_hash,
                     'peer_id': self.torrent.peer_id,

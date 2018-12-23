@@ -90,11 +90,15 @@ class Client(object):
             self.tracker.downloading_message(downloaded, remaining)
 
             time.sleep(0.1)
+            
+        new_size = self.piecesManager.check_percent_finished()
+        downloaded = new_size - starting_size
+        remaining = self.torrent.totalLength - (starting_size + downloaded)
         self.tracker.stop_message(downloaded, remaining)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
         
-        new_size = self.piecesManager.check_percent_finished()
+        
         rate = (new_size-starting_size)/(time.time()-start_time)/1000. # rate in KBps
         progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
             
