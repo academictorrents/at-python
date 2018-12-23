@@ -81,6 +81,7 @@ class Client(object):
             progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
             
             if new_size == old_size:
+                time.sleep(0.1)
                 continue
 
             old_size = new_size
@@ -88,7 +89,7 @@ class Client(object):
             remaining = self.torrent.totalLength - (starting_size + downloaded)
             self.tracker.downloading_message(downloaded, remaining)
 
-            time.sleep(0.01)
+            time.sleep(0.1)
         self.tracker.stop_message(downloaded, remaining)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
