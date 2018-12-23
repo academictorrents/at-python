@@ -20,7 +20,18 @@ def get(hash, datastore=None, name=None, showlogs=False):
     if "/" not in hash:
         torrent_dir = utils.get_torrent_dir(datastore=datastore, name=name)
         torrent = Torrent(hash, torrent_dir)
+        
+        name = torrent.torrentFile['info']['name']
+        if "length" in torrent.torrentFile['info']:
+            size_mb = torrent.torrentFile['info']['length']/1000./1000.
+        else:
+            total_length = 0
+            for f in torrent.torrentFile['info']['files']:
+                total_length += f['length']
+            size_mb = total_length/1000./1000.
 
+        print("Torrent name: " + name + ", Size: {0:.2f}MB".format(size_mb))
+        
         timestamp = utils.read_timestamp(hash)
         if utils.timestamp_is_within_30_days(timestamp) and utils.filenames_present(torrent, datastore):
             return torrent_dir + torrent.torrentFile['info']['name']
