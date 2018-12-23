@@ -9,6 +9,7 @@ import socket
 import threading
 import datetime
 import time
+from threading import Thread
 from . import utils
 from .version import __version__
 # Python 2 and 3: alternative 4
@@ -28,14 +29,24 @@ class FuncThread(threading.Thread):
         self._target(*self._args)
 
 
-class Tracker(object):
+class Tracker(Thread):
     def __init__(self, torrent, newpeersQueue):
+        Thread.__init__(self)
         self.torrent = torrent
         self.lstThreads = []
         self.newpeersQueue = newpeersQueue
-        self.getPeersFromTrackers()
+        self.stopRequested = False
+        self.setDaemon(True)
         self.last_message_time = int(datetime.datetime.now().strftime("%s"))
+        
+    def requestStop(self):
+        self.stopRequested = True
 
+    def run(self):
+        while not self.stopRequested:
+            self.getPeersFromTrackers()
+            time.sleep(30)
+            
     def getPeersFromTrackers(self):
         for tracker in self.torrent.announceList:
             if tracker[0] == '':
@@ -52,7 +63,10 @@ class Tracker(object):
 
         for t in self.lstThreads:
             t.join()
-
+        
+    def requestStop(self):
+        self.stopRequested = True
+        
     def scrapeHTTP(self, torrent, tracker):
         params = {
             'info_hash': torrent.info_hash,
