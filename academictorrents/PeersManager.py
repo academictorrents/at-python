@@ -29,7 +29,7 @@ class PeersManager(Thread):
             try:
                 peer = HttpPeer.HttpPeer(torrent, url)
                 self.httpPeers.append(peer)
-                print("adding HttpPeer: " + peer.url)
+                #print("adding HttpPeer: " + peer.url) #[JPC: I don't think we need to tell the user]
             except Exception:
                 pass
 
