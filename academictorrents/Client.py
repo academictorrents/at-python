@@ -76,25 +76,30 @@ class Client(object):
                     httpPeer.publish_responses(responses, pieces_by_file)
 
             new_size = self.piecesManager.check_percent_finished()
+            
+            rate = (new_size-starting_size)/(time.time()-start_time)/1000. # rate in KBps
+            progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
+            
             if new_size == old_size:
                 continue
 
             old_size = new_size
-            rate = (new_size-starting_size)/(time.time()-start_time)/1000. # rate in KBps
-            progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
-                                        
             downloaded = new_size - starting_size
             remaining = self.torrent.totalLength - (starting_size + downloaded)
             self.tracker.downloading_message(downloaded, remaining)
 
-            time.sleep(0.1)
+            time.sleep(0.01)
         self.tracker.stop_message(downloaded, remaining)
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
-
+        
+        new_size = self.piecesManager.check_percent_finished()
+        rate = (new_size-starting_size)/(time.time()-start_time)/1000. # rate in KBps
+        progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
+            
         if remaining == 0:
             utils.write_timestamp(self.hash)
-        print("Download Complete!")
+        print("\nDownload Complete!")
         return self.torrent_dir + self.torrent.torrentFile['info']['name']
 
     def reset_pending_blocks(self, piece):
