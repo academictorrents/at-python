@@ -101,6 +101,7 @@ class Piece(object):
         for block in self.blocks:
             if block[0] == "Free" or block[0] == "Pending":
                 return False
+
         # Before returning True, we must check if hashes match
         data = self.assembleData()
         if self.isHashPieceCorrect(data):
@@ -137,7 +138,10 @@ class Piece(object):
     def assembleData(self):
         buf = b""
         for block in self.blocks:
-            buf += block[2]
+            try:
+                buf += block[2]
+            except Exception:
+                continue
         return buf
 
     def isHashPieceCorrect(self, data):
