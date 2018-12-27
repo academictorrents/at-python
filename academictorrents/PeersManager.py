@@ -11,10 +11,11 @@ from . import HttpPeer, Peer
 
 
 class PeersManager(Thread):
-    def __init__(self, torrent, piecesManager):
+    def __init__(self, torrent, piecesManager, requestQueue):
         Thread.__init__(self)
         self.peers = []
         self.httpPeers = []
+        self.requestQueue = requestQueue
         self.torrent = torrent
         self.piecesManager = piecesManager
         self.rarestPieces = RarestPieces.RarestPieces(piecesManager)
@@ -25,36 +26,9 @@ class PeersManager(Thread):
         for i in range(self.piecesManager.numberOfPieces):
             self.piecesByPeer.append([0, []])
 
-        for url in self.torrent.torrentFile.get('url-list'):
-            try:
-                peer = HttpPeer.HttpPeer(torrent, url)
-                self.httpPeers.append(peer)
-                #print("adding HttpPeer: " + peer.url) #[JPC: I don't think we need to tell the user]
-            except Exception:
-                pass
-
         # Events
         pub.subscribe(self.addPeer, 'PeersManager.newPeer')
         pub.subscribe(self.peersBitfield, 'PeersManager.updatePeersBitfield')
-
-    def requestStop(self):
-        self.stopRequested = True
-
-    def peersBitfield(self, bitfield=None, peer=None, pieceIndex=None):
-        if pieceIndex is not None:
-            self.piecesByPeer[pieceIndex] = ["", []]
-            return
-
-        for i in range(len(self.piecesByPeer)):
-            if bitfield[i] == 1 and peer not in self.piecesByPeer[i][1] and not self.piecesByPeer[i][0] == "":
-                self.piecesByPeer[i][1].append(peer)
-                self.piecesByPeer[i][0] = len(self.piecesByPeer[i][1])
-
-    def getPeer(self, index):
-        for peer in self.peers:
-            if isinstance(peer, HttpPeer.HttpPeer) or (isinstance(peer, Peer.Peer) and peer.hasPiece(index)):
-                return peer
-        return False
 
     def run(self):
         while not self.stopRequested:
@@ -80,6 +54,31 @@ class PeersManager(Thread):
                     continue
                 peer.readBuffer += msg
                 self.manageMessageReceived(peer)
+
+    def requestStop(self):
+        self.stopRequested = True
+
+    def peersBitfield(self, bitfield=None, peer=None, pieceIndex=None):
+        if pieceIndex is not None:
+            self.piecesByPeer[pieceIndex] = ["", []]
+            return
+
+        for i in range(len(self.piecesByPeer)):
+            if bitfield[i] == 1 and peer not in self.piecesByPeer[i][1] and not self.piecesByPeer[i][0] == "":
+                self.piecesByPeer[i][1].append(peer)
+                self.piecesByPeer[i][0] = len(self.piecesByPeer[i][1])
+
+    def getUnchokedPeer(self, index):
+        for peer in self.peers:
+            if isinstance(peer, Peer.Peer) and peer.hasPiece(index) and not peer.state["am_choking"]:
+                return peer
+        return False
+
+    def getHttpPeer(self):
+        for peer in self.httpPeers:
+            if isinstance(peer, HttpPeer.HttpPeer):
+                return peer
+        return False
 
     def startConnectionToPeers(self):
         for peer in self.peers:
@@ -154,3 +153,14 @@ class PeersManager(Thread):
     def requestNewPiece(self, peer, pieceIndex, blockOffset, length):
         request = peer.build_request(pieceIndex, blockOffset, length)
         peer.sendToPeer(request)
+
+    def httpRequest(self):
+        while True:
+            httpPeer, pieces_by_file = self.requestQueue.get()
+            responses = httpPeer.request_ranges(pieces_by_file)
+            codes = [response[0].status_code for response in responses.values()]
+            if any(code != 206 for code in codes):
+                self.httpPeers.remove(httpPeer)
+                return
+            httpPeer.publish_responses(responses, pieces_by_file)
+            self.requestQueue.task_done()

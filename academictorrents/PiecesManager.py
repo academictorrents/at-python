@@ -38,7 +38,7 @@ class PiecesManager(Thread):
         for index, piece in enumerate(self.pieces):
             if index % 50 == 0:
                 progress_bar.print_progress(index, self.numberOfPieces, "Checking for pieces on disk:", "")
-            piece.isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
+            self.bitfield[index] = piece.isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
             num_finished.append(piece.finished)
         progress_bar.print_progress(index, self.numberOfPieces, "Checking for pieces on disk:", "")
         print("Found " + str(sum(num_finished)) + " finished pieces out of " + str(len(num_finished)) + " total pieces.")

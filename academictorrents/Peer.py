@@ -27,7 +27,7 @@ class Peer(object):
         self.socketsPeers = []
 
         self.state = {
-            'am_choking': True,
+            'am_choking': False,
             'am_interested': False,
             'peer_choking': True,
             'peer_interested': False,

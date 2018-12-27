@@ -9,7 +9,9 @@ class HttpPeer(object):
     def __init__(self, torrent, url):
         self.readBuffer = b""
         self.torrent = torrent
+        self.url = url
         self.handshake(url)
+        self.sess = requests.Session()
 
     def handshake(self, url):
         if not url:
@@ -35,9 +37,11 @@ class HttpPeer(object):
         # TODO: Add another way to exit this loop when we don't hit the max size
         size = 0
         temp_size = 0
-        max_size_to_download = 1500000
+        max_size_to_download = 20000000
+        max_num_pieces = 100
         temp_pieces = []
         pieces = []
+
         for idx, b in enumerate(piecesManager.bitfield):
             piece = piecesManager.pieces[idx]
             if not b and not piece.finished:
@@ -48,7 +52,7 @@ class HttpPeer(object):
                 size = temp_size
                 pieces = temp_pieces
 
-            if size > max_size_to_download or len(pieces) > 5:
+            if size > max_size_to_download or len(pieces) > max_num_pieces:
                 return pieces
 
             if b:
@@ -64,7 +68,7 @@ class HttpPeer(object):
             end = start
             for piece in pieces:
                 end += piece.get_file_length(filename)
-            resp = requests.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False)
+            resp = self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False)
             responses[filename] = (resp, start)
         return responses
 
@@ -73,7 +77,6 @@ class HttpPeer(object):
         for piece_list in pieces_by_file.values():
             for piece in piece_list:
                 unique_pieces.add(piece)
-
         for piece in unique_pieces:
             if piece.finished:
                 continue
@@ -92,7 +95,9 @@ class HttpPeer(object):
                     block_size = piece.blocks[idx][1]
                     pub.sendMessage('PiecesManager.Piece', piece=(piece.pieceIndex, blockOffset, piece.pieceData[blockOffset: blockOffset + block_size]))
                     blockOffset += block_size
-            except Exception:
+
+            except Exception as e:
+                print(e)
                 pass
 
     def construct_pieces_by_file(self, pieces):

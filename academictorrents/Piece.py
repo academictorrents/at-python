@@ -95,6 +95,8 @@ class Piece(object):
         if self.isHashPieceCorrect(data):
             self.finished = True
             data = b''
+            return True
+        return False
 
     def isComplete(self, write=True):
         # If there is at least one block Free|Pending -> Piece not complete -> return false
