@@ -53,7 +53,7 @@ class Client(object):
     def start(self, starting_size):
         new_size = starting_size
         old_size = 0
-        MAX_PIECES_TO_REQ = 20
+        MAX_PIECES_TO_REQ = 100
         start_time = time.time()
 
         while not self.piecesManager.are_pieces_completed():
@@ -76,7 +76,6 @@ class Client(object):
                         index, offset, length = data
                         self.peersManager.requestNewPiece(peer, index, offset, length)
                     pieces_requested += 1
-
             if len(self.peersManager.httpPeers) > self.requestQueue.qsize():
                 for httpPeer in self.peersManager.httpPeers:
                     pieces = httpPeer.get_pieces(self.piecesManager)

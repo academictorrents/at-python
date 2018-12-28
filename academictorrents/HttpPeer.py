@@ -38,7 +38,7 @@ class HttpPeer(object):
         size = 0
         temp_size = 0
         max_size_to_download = 5000000
-        max_num_pieces = 10
+        max_num_pieces = 5
         temp_pieces = []
         pieces = []
 
