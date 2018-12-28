@@ -37,8 +37,8 @@ class HttpPeer(object):
         # TODO: Add another way to exit this loop when we don't hit the max size
         size = 0
         temp_size = 0
-        max_size_to_download = 20000000
-        max_num_pieces = 100
+        max_size_to_download = 5000000
+        max_num_pieces = 10
         temp_pieces = []
         pieces = []
 
@@ -97,7 +97,7 @@ class HttpPeer(object):
                     blockOffset += block_size
 
             except Exception as e:
-                print(e)
+                # print(e)
                 pass
 
     def construct_pieces_by_file(self, pieces):
