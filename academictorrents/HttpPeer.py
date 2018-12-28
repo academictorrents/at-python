@@ -44,15 +44,16 @@ class HttpPeer(object):
 
         for idx, b in enumerate(piecesManager.bitfield):
             piece = piecesManager.pieces[idx]
-            if not b and not piece.finished:
+            if not b and not piece.finished and piece.getEmptyBlock():
                 temp_pieces.append(piece)
                 temp_size += piece.pieceSize
+                piece.set_all_blocks_pending()
 
             if size < temp_size:
                 size = temp_size
                 pieces = temp_pieces
 
-            if size > max_size_to_download or len(pieces) > max_num_pieces:
+            if size >= max_size_to_download or len(pieces) >= max_num_pieces:
                 return pieces
 
             if b:
@@ -68,7 +69,10 @@ class HttpPeer(object):
             end = start
             for piece in pieces:
                 end += piece.get_file_length(filename)
-            resp = self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False)
+            try:
+                resp = self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False)
+            except Exception as e:
+                return False
             responses[filename] = (resp, start)
         return responses
 
@@ -88,7 +92,6 @@ class HttpPeer(object):
                 pieceOffset = piece.get_piece_offset(filename)
                 fileOffset = piece.get_file_offset(filename) - resp_start
                 piece.pieceData += resp.content[fileOffset: fileOffset + length]
-
             blockOffset = 0
             try:
                 for idx in range(int(len(piece.pieceData)/piece.BLOCK_SIZE)):

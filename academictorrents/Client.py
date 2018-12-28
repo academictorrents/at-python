@@ -53,13 +53,16 @@ class Client(object):
     def start(self, starting_size):
         new_size = starting_size
         old_size = 0
+        MAX_PIECES_TO_REQ = 20
         start_time = time.time()
+
         while not self.piecesManager.are_pieces_completed():
+            unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
+            for piece in unfinished_pieces:
+                piece.reset_pending_blocks()
 
             if len(self.peersManager.peers) > 0:
-                MAX_PIECES_TO_REQ = 20
                 pieces_requested = 0
-                unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
                 for piece in unfinished_pieces:
                     if pieces_requested > MAX_PIECES_TO_REQ:
                         break
@@ -72,9 +75,6 @@ class Client(object):
                     if data:
                         index, offset, length = data
                         self.peersManager.requestNewPiece(peer, index, offset, length)
-
-                    piece.isComplete()
-                    self.reset_pending_blocks(piece)
                     pieces_requested += 1
 
             if len(self.peersManager.httpPeers) > self.requestQueue.qsize():
@@ -112,9 +112,3 @@ class Client(object):
             utils.write_timestamp(self.hash)
         print("\nDownload Complete!")
         return self.torrent_dir + self.torrent.torrentFile['info']['name']
-
-    def reset_pending_blocks(self, piece):
-        for block in piece.blocks:
-            if(int(time.time()) - block[3]) > 8 and block[0] == "Pending":
-                block[0] = "Free"
-                block[3] = 0

@@ -73,6 +73,12 @@ class Piece(object):
                 blockIndex += 1
         return False
 
+    def set_all_blocks_pending(self):
+        for block in self.blocks:
+            if block[0] == "Free":
+                block[0] = "Pending"
+                block[3] = int(time.time())
+
     def freeBlockLeft(self):
         for block in self.blocks:
             if block[0] == "Free":
@@ -103,7 +109,6 @@ class Piece(object):
         for block in self.blocks:
             if block[0] == "Free" or block[0] == "Pending":
                 return False
-
         # Before returning True, we must check if hashes match
         data = self.assembleData()
         if self.isHashPieceCorrect(data):
@@ -152,3 +157,9 @@ class Piece(object):
         else:
             self.initBlocks()
             return False
+
+    def reset_pending_blocks(self):
+        for block in self.blocks:
+            if(int(time.time()) - block[3]) > 8 and block[0] == "Pending":
+                block[0] = "Free"
+                block[3] = 0

@@ -158,11 +158,10 @@ class PeersManager(Thread):
         while True:
             httpPeer, pieces_by_file = self.requestQueue.get()
             responses = httpPeer.request_ranges(pieces_by_file)
+            if not responses:
+                continue
             codes = [response[0].status_code for response in responses.values()]
             if any(code != 206 for code in codes):
-                try:
-                    self.httpPeers.remove(httpPeer)
-                except Exception:
-                    continue
+                continue
             httpPeer.publish_responses(responses, pieces_by_file)
             self.requestQueue.task_done()
