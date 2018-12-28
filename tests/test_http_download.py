@@ -10,7 +10,7 @@ class HttpDownloadTestSuite(unittest.TestCase):
     """Test cases on the academictorrents.py file."""
 
     def test_get_file_http(self):
-        filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f')
+        filename = at.get('0a8cb3446b0de5690fee29a2c68922ff691c7f9a')
         self.assertTrue(os.path.isfile(filename))
 
 if __name__ == '__main__':

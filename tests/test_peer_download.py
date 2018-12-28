@@ -9,7 +9,6 @@ import sys
 class PeerDownloadTestSuite(unittest.TestCase):
     """Test cases on the academictorrents.py file."""
 
-
     def test_get_multiple_files(self):
         path = at.get('b79869ca12787166de88311ca1f28e3ebec12dec')
         files = os.listdir(path)
