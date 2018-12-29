@@ -66,7 +66,6 @@ class Client(object):
                 for piece in unfinished_pieces:
                     if pieces_requested > MAX_PIECES_TO_REQ:
                         break
-
                     peer = self.peersManager.getUnchokedPeer(piece.pieceIndex)
                     if not peer:
                         continue
@@ -79,13 +78,13 @@ class Client(object):
             if len(self.peersManager.httpPeers) > self.requestQueue.qsize():
                 for httpPeer in self.peersManager.httpPeers:
                     pieces = httpPeer.get_pieces(self.piecesManager)
-                    pieces_by_file = httpPeer.construct_pieces_by_file(pieces)  # set all those blocks to Pending
-                    self.requestQueue.put((httpPeer, pieces_by_file))
+                    if pieces:
+                        pieces_by_file = httpPeer.construct_pieces_by_file(pieces)
+                        self.requestQueue.put((httpPeer, pieces_by_file))
 
             new_size = self.piecesManager.check_percent_finished()
             rate = (new_size-starting_size)/(time.time()-start_time)/1000. # rate in KBps
             progress_bar.print_progress(new_size, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
-
             if new_size == old_size:
                 time.sleep(0.1)
                 continue
