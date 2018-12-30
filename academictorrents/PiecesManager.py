@@ -13,6 +13,7 @@ class PiecesManager(Thread):
         Thread.__init__(self)
         self.torrent = torrent
         self.piecesCompleted = False
+        self.stopRequested = False
 
         self.numberOfPieces = torrent.numberOfPieces
         self.bitfield = bitstring.BitArray(self.numberOfPieces)
@@ -25,6 +26,13 @@ class PiecesManager(Thread):
         # Create events
         pub.subscribe(self.receive_block_piece, 'PiecesManager.Piece')
         pub.subscribe(self.update_bit_field, 'PiecesManager.PieceCompleted')
+
+    def requestStop(self):
+        self.stopRequested = True
+
+    def run(self):
+        while not self.stopRequested:
+            pass
 
     def check_percent_finished(self):
         b = 0
@@ -49,6 +57,7 @@ class PiecesManager(Thread):
     def receive_block_piece(self,piece):
         piece_index, piece_offset, piece_data = piece
         self.pieces[int(piece_index)].setBlock(piece_offset, piece_data)
+
 
     def generate_pieces(self):
         pieces = []

@@ -6,12 +6,30 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class HttpPeer(object):
-    def __init__(self, torrent, url):
+    def __init__(self, torrent, url, requestQueue):
         self.readBuffer = b""
+        self.requestQueue = requestQueue
+        self.stopRequested = False
         self.torrent = torrent
         self.url = url
         self.handshake(url)
         self.sess = requests.Session()
+
+
+    def requestStop(self):
+        self.stopRequested = True
+
+    def httpRequest(self):
+        while not self.stopRequested:
+            httpPeer, pieces_by_file = self.requestQueue.get()
+            responses = httpPeer.request_ranges(pieces_by_file)
+            if not responses:
+                continue
+            codes = [response[0].status_code for response in responses.values()]
+            if any(code != 206 for code in codes):
+                continue
+            httpPeer.publish_responses(responses, pieces_by_file)
+            self.requestQueue.task_done()
 
     def handshake(self, url):
         if not url:
@@ -93,15 +111,10 @@ class HttpPeer(object):
                 fileOffset = piece.get_file_offset(filename) - resp_start
                 piece.pieceData += resp.content[fileOffset: fileOffset + length]
             blockOffset = 0
-            try:
-                for idx in range(int(len(piece.pieceData)/piece.BLOCK_SIZE)):
-                    block_size = piece.blocks[idx][1]
-                    pub.sendMessage('PiecesManager.Piece', piece=(piece.pieceIndex, blockOffset, piece.pieceData[blockOffset: blockOffset + block_size]))
-                    blockOffset += block_size
-
-            except Exception as e:
-                # print(e)
-                pass
+            for idx in range(int(len(piece.pieceData)/piece.BLOCK_SIZE)):
+                block_size = piece.blocks[idx][1]
+                pub.sendMessage('PiecesManager.Piece', piece=(piece.pieceIndex, blockOffset, piece.pieceData[blockOffset: blockOffset + block_size]))
+                blockOffset += block_size
 
     def construct_pieces_by_file(self, pieces):
         pieces_by_file = defaultdict(list)
