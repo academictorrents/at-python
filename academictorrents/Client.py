@@ -50,7 +50,7 @@ class Client(object):
             self.peersManager.make_requests(unfinished_pieces)
 
             # Make WebSeed requests
-            if 2 * len(self.httpPeers) > self.requestQueue.qsize():
+            if len(self.httpPeers) > self.requestQueue.qsize():
                 for httpPeer in self.httpPeers:
                     pieces = httpPeer.get_pieces(self.piecesManager)
                     if pieces:
@@ -60,7 +60,7 @@ class Client(object):
             # Record progress
             cur_downloaded = self.piecesManager.check_percent_finished()
             rate = (cur_downloaded - self.start_downloaded)/(time.time()-self.start_time)/1000. # rate in KBps
-            progress_bar.print_progress(cur_downloaded, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.peersManager.httpPeers)), "({0:.2f}kB/s)".format(rate))
+            progress_bar.print_progress(cur_downloaded, self.torrent.totalLength, "BT:{}, Web:{}".format(len(self.peersManager.peers),len(self.httpPeers)), "({0:.2f}kB/s)".format(rate))
             self.tracker.set_downloaded(cur_downloaded)
             time.sleep(0.1)
 

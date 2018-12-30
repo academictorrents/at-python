@@ -13,7 +13,6 @@ from six import string_types
 class Peer(object):
     def __init__(self, torrent, ip, port=6881):
         self.lastHandshakeAttempt = 0
-        self.lock = threading.Lock()
         self.handshake = None
         self.hasHandshaked = False
         self.readBuffer = b""

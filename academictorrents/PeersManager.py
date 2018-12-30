@@ -12,7 +12,6 @@ class PeersManager(Thread):
     def __init__(self, torrent, piecesManager):
         Thread.__init__(self)
         self.peers = []
-        self.httpPeers = []
         self.torrent = torrent
         self.piecesManager = piecesManager
         self.rarestPieces = RarestPieces.RarestPieces(piecesManager)

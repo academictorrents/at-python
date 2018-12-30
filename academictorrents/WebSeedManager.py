@@ -16,9 +16,7 @@ class WebSeedManager(Thread):
     def run(self):
         while not self.stopRequested:
             httpPeer, pieces_by_file = self.requestQueue.get()
-            print("request!")
             responses = httpPeer.request_ranges(pieces_by_file)
-            print("response!")
             if not responses:
                 continue
             codes = [response[0].status_code for response in responses.values()]
