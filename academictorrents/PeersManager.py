@@ -5,7 +5,7 @@ import logging
 from threading import Thread
 from pubsub import pub
 from . import RarestPieces
-from . import HttpPeer, Peer
+from . import Peer
 
 
 class PeersManager(Thread):
@@ -153,7 +153,7 @@ class PeersManager(Thread):
 
         while requests < max_requests:
             i += 1
-            piece = unfinished_pieces[i]
+            piece = unfinished_pieces[i % len(unfinished_pieces)]
             peer = self.getUnchokedPeer(piece.pieceIndex)
             if not peer:
                 continue
