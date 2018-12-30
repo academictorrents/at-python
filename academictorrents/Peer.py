@@ -27,7 +27,7 @@ class Peer(object):
         self.socketsPeers = []
 
         self.state = {
-            'am_choking': False,
+            'am_choking': True,
             'am_interested': False,
             'peer_choking': True,
             'peer_interested': False,
@@ -191,7 +191,6 @@ class Peer(object):
 
     def unchoke(self,payload=None):
         logging.info("Unchoking peer: " + str(self.ip))
-        pub.sendMessage('PeersManager.peerUnchoked',peer=self)
         self.state['peer_choking'] = False
 
     def interested(self,payload=None):

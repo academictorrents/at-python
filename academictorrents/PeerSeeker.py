@@ -22,13 +22,13 @@ class PeerSeeker(Thread):
 
     def run(self):
         while not self.stopRequested:
-            
+
             # reset failed peers so we can try again
             if (time.time() - self.reset_time) > 30:
                 logging.info("Resetting peerFailed list " + str(self.peerFailed))
                 self.peerFailed = [("", "")]
                 self.reset_time = time.time()
-                
+
             peer = self.newpeersQueue.get()
             if not (peer[0], peer[1]) in self.peerFailed:
                 p = Peer.Peer(self.torrent, peer[0], peer[1])

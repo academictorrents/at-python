@@ -30,23 +30,27 @@ class FuncThread(threading.Thread):
 
 
 class Tracker(Thread):
-    def __init__(self, torrent, newpeersQueue):
+    def __init__(self, torrent, newpeersQueue, downloaded):
         Thread.__init__(self)
         self.torrent = torrent
         self.lstThreads = []
         self.newpeersQueue = newpeersQueue
         self.stopRequested = False
         self.setDaemon(True)
+        self.downloaded = downloaded
         self.last_message_time = int(datetime.datetime.now().strftime("%s"))
-        
+
     def requestStop(self):
         self.stopRequested = True
+
 
     def run(self):
         while not self.stopRequested:
             self.getPeersFromTrackers()
             time.sleep(30)
-            
+            self.downloading_message()
+        self.stop_message()
+
     def getPeersFromTrackers(self):
         for tracker in self.torrent.announceList:
             if tracker[0] == '':
@@ -63,10 +67,13 @@ class Tracker(Thread):
 
         for t in self.lstThreads:
             t.join()
-        
+
     def requestStop(self):
         self.stopRequested = True
-        
+
+    def set_downloaded(self, size):
+        self.downloaded = size
+
     def scrapeHTTP(self, torrent, tracker):
         params = {
             'info_hash': torrent.info_hash,
@@ -85,36 +92,35 @@ class Tracker(Thread):
         except Exception:
             pass
 
-    def stop_message(self, downloaded, remaining):
+    def stop_message(self):
         resp = requests.models.Response()
-        if downloaded == 0:
-            return True
         for tracker in self.torrent.announceList:
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
-                event = "completed" if remaining == 0 else "stopped"
+                event = "completed" if self.remaining == 0 else "stopped"
                 params = {
                     'info_hash': self.torrent.info_hash,
                     'peer_id': self.torrent.peer_id,
                     'uploaded': 0,
-                    'downloaded': downloaded,
-                    'left': remaining,
+                    'downloaded': self.torrent.totalLength,
+                    'left': 0,
                     'event': event,
                     'port': 6881
                 }
                 try:
-                    resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.post(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
+                    print(e)
                     pass
             return params, resp
 
-    def downloading_message(self, downloaded, remaining):
+    def downloading_message(self):
         if utils.timestamp_is_within_10_seconds(self.last_message_time):
             return
         self.last_message_time = int(datetime.datetime.now().strftime("%s"))
         resp = requests.models.Response()
-        if downloaded == 0:
+        if self.downloaded == 0:
             return True
         for tracker in self.torrent.announceList:
             if tracker[0] == '':
@@ -124,13 +130,14 @@ class Tracker(Thread):
                     'info_hash': self.torrent.info_hash,
                     'peer_id': self.torrent.peer_id,
                     'uploaded': 0,
-                    'downloaded': downloaded,
-                    'left': remaining,
+                    'downloaded': self.downloaded,
+                    'left': self.torrent.totalLength - self.downloaded,
                     'port': 6881
                 }
                 try:
                     resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
+                    print(e)
                     pass
             return params, resp
 

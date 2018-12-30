@@ -160,6 +160,6 @@ class Piece(object):
 
     def reset_pending_blocks(self):
         for block in self.blocks:
-            if(int(time.time()) - block[3]) > 8 and block[0] == "Pending":
+            if(int(time.time()) - block[3]) > 2 and block[0] == "Pending":
                 block[0] = "Free"
                 block[3] = 0

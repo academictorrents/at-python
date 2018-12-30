@@ -70,7 +70,7 @@ class PeersManager(Thread):
 
     def getUnchokedPeer(self, index):
         for peer in self.peers:
-            if isinstance(peer, Peer.Peer) and peer.hasPiece(index) and not peer.state["am_choking"]:
+            if isinstance(peer, Peer.Peer) and peer.hasPiece(index) and not peer.state["peer_choking"]:
                 return peer
         return False
 
@@ -142,6 +142,8 @@ class PeersManager(Thread):
             # Message is not complete. Return
             if len(payload) < msgLength - 1:
                 return
+            print("len(peer.readBuffer):" + str(len(peer.readBuffer)))
+            print("msgCode:" + str(msgCode))
 
             peer.readBuffer = peer.readBuffer[msgLength + 4:]
             try:
@@ -157,11 +159,14 @@ class PeersManager(Thread):
     def httpRequest(self):
         while True:
             httpPeer, pieces_by_file = self.requestQueue.get()
+            print("\n httpRequest: " + str(time.time()))
             responses = httpPeer.request_ranges(pieces_by_file)
             if not responses:
                 continue
+            print("response: " + str(time.time()))
             codes = [response[0].status_code for response in responses.values()]
             if any(code != 206 for code in codes):
                 continue
             httpPeer.publish_responses(responses, pieces_by_file)
+            print("written: " + str(time.time()))
             self.requestQueue.task_done()
