@@ -10,7 +10,6 @@ class PiecesManager(Thread):
     def __init__(self, torrent):
         Thread.__init__(self)
         self.torrent = torrent
-        self.piecesCompleted = False
         self.stopRequested = False
 
         self.numberOfPieces = torrent.numberOfPieces
@@ -70,15 +69,6 @@ class PiecesManager(Thread):
                 pieces.append(Piece.Piece(i, self.torrent.pieceLength, self.torrent.pieces[start:end]))
         return pieces
 
-    def are_pieces_completed(self):
-        for piece in self.pieces:
-            if not piece.finished:
-                return False
-
-        self.piecesCompleted = True
-        logging.info("File(s) downloaded")
-        return True
-
     def get_files(self):
         files = []
         pieceOffset = 0
@@ -118,5 +108,8 @@ class PiecesManager(Thread):
                     return piece.get_block(block_offset,block_length)
                 else:
                     break
-
         return None
+
+    def reset_all_pending_blocks(self, unfinished_pieces):
+        for piece in unfinished_pieces:
+            piece.reset_pending_blocks()

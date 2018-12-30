@@ -17,19 +17,16 @@ class Piece(object):
         self.BLOCK_SIZE = BLOCK_SIZE
         self.num_blocks = int(math.ceil(float(pieceSize) / BLOCK_SIZE))
         self.blocks = []
-        self.initBlocks()
+        self.init_blocks()
 
-    def initBlocks(self):
+    def init_blocks(self):
         self.blocks = []
-        if self.num_blocks > 1:
-            for i in range(self.num_blocks):
-                    self.blocks.append(["Free", BLOCK_SIZE, b"", 0])
+        for blockIndex in range(self.num_blocks):
+            self.blocks.append(["Free", BLOCK_SIZE, b"", 0, blockIndex])
 
-            # Last block of last piece, the special block
-            if (self.pieceSize % BLOCK_SIZE) > 0:
-                self.blocks[self.num_blocks-1][1] = self.pieceSize % BLOCK_SIZE
-        else:
-            self.blocks.append(["Free", int(self.pieceSize), b"", 0])
+        # Last block of last piece, the special block
+        if (self.pieceSize % BLOCK_SIZE) > 0:
+            self.blocks[self.num_blocks-1][1] = self.pieceSize % BLOCK_SIZE
 
     def get_file_offset(self, filename):
         for f in self.files:
@@ -60,6 +57,13 @@ class Piece(object):
     def get_block(self, block_offset, block_length):
         return self.pieceData[block_offset:block_length]
 
+    def get_free_blocks(self):
+        free_blocks = []
+        for block in self.blocks:
+            if block[0] == "Free":
+                free_blocks.append(block)
+        return free_blocks
+
     def getEmptyBlock(self):
         if not self.finished:
             blockIndex = 0
@@ -76,6 +80,11 @@ class Piece(object):
             if block[0] == "Free":
                 block[0] = "Pending"
                 block[3] = int(time.time())
+
+    def set_pending_block(self, block):
+        if block[0] == "Free":
+            block[0] = "Pending"
+            block[3] = int(time.time())
 
     def freeBlockLeft(self):
         for block in self.blocks:
@@ -153,7 +162,7 @@ class Piece(object):
         if utils.sha1_hash(data) == self.pieceHash:
             return True
         else:
-            self.initBlocks()
+            self.init_blocks()
             return False
 
     def reset_pending_blocks(self):

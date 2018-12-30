@@ -143,3 +143,22 @@ class PeersManager(Thread):
     def requestNewPiece(self, peer, pieceIndex, blockOffset, length):
         request = peer.build_request(pieceIndex, blockOffset, length)
         peer.sendToPeer(request)
+
+    def make_requests(self, unfinished_pieces):
+        max_requests = 50
+        requests = 0
+        i = 0
+        if not self.peers:
+            return
+
+        while requests < max_requests:
+            i += 1
+            piece = unfinished_pieces[i]
+            peer = self.getUnchokedPeer(piece.pieceIndex)
+            if not peer:
+                continue
+
+            for block in piece.get_free_blocks():
+                piece.set_pending_block(block)
+                self.requestNewPiece(peer, piece.pieceIndex, block[4] * piece.BLOCK_SIZE, block[1])
+                requests += 1

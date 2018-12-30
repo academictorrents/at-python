@@ -35,31 +35,14 @@ class Client(object):
                 pass
 
     def start(self):
-        MAX_BLOCKS_TO_REQ = 50
 
-        while not self.piecesManager.are_pieces_completed():
-            # Reset Pending Blocks
+        while True:
             unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
-            for piece in self.piecesManager.pieces:
-                piece.reset_pending_blocks()
+            if not unfinished_pieces:
+                break
 
-            # Make P2P requests
-            if len(self.peersManager.peers) > 0:
-                blocks_requested = 0
-                for piece in unfinished_pieces:
-                    if blocks_requested > MAX_BLOCKS_TO_REQ:
-                        break
-                    for block in [block for block in piece.blocks if block[0] == "Free"]:
-                        peer = self.peersManager.getUnchokedPeer(piece.pieceIndex)
-
-                        if not peer:
-                            continue
-                        data = piece.getEmptyBlock()
-
-                        if data:
-                            index, offset, length = data
-                            self.peersManager.requestNewPiece(peer, index, offset, length)
-                    blocks_requested += 1
+            self.piecesManager.reset_all_pending_blocks(unfinished_pieces)
+            self.peersManager.make_requests(unfinished_pieces)
 
             # Make WebSeed requests
             if len(self.peersManager.httpPeers) > self.requestQueue.qsize():
