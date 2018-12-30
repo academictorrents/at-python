@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 import math
 import time
 from . import utils

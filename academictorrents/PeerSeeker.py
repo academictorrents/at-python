@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 import time
 from . import Peer
 import logging

@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 import time
 import bencode
 import logging

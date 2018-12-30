@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 import bencode
 import requests
 import logging

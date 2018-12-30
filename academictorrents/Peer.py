@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 import sys
 import socket
 import struct

@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 import select
 import time
 from . import utils

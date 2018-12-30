@@ -1,5 +1,3 @@
-__author__ = 'alexisgallepe'
-
 from pubsub import pub
 
 class RarestPieces(object):
