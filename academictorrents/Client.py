@@ -47,7 +47,7 @@ class Client(object):
                 break
 
             self.piecesManager.reset_all_pending_blocks(unfinished_pieces)
-            # self.peersManager.make_requests(unfinished_pieces)
+            self.peersManager.make_requests(unfinished_pieces)
 
             # Make WebSeed requests
             if 2 * len(self.httpPeers) > self.requestQueue.qsize():
