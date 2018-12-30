@@ -1,10 +1,11 @@
 import time
 from queue import Queue
-from . import HttpPeer
 from . import progress_bar
 from .PeerSeeker import PeerSeeker
 from .PeersManager import PeersManager
 from .Tracker import Tracker
+from .WebSeedManager import WebSeedManager
+from .HttpPeer import HttpPeer
 
 
 class Client(object):
@@ -20,33 +21,37 @@ class Client(object):
         self.peerSeeker = PeerSeeker(self.newpeersQueue, torrent)
         self.peersManager = PeersManager(self.torrent, self.piecesManager)
         self.tracker = Tracker(torrent, self.newpeersQueue, start_downloaded)
+        self.webSeedManagers = []
 
         self.tracker.start()
         self.peersManager.start()
         self.peerSeeker.start()
         self.piecesManager.start()
 
+        self.httpPeers = []
         for url in self.torrent.torrentFile.get('url-list'):
-            try:
-                peer = HttpPeer.HttpPeer(self.torrent, url, self.requestQueue)
-                peer.start()
-                self.peersManager.httpPeers.append(peer)
-            except Exception:
-                pass
+            peer = HttpPeer(self.torrent, url)
+            if not peer:
+                continue
+            self.httpPeers.append(peer)
+
+        for i in range(len(self.httpPeers)):
+            t = WebSeedManager(torrent, self.requestQueue, self.httpPeers)
+            t.start()
+            self.webSeedManagers.append(t)
 
     def start(self):
-
         while True:
             unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
             if not unfinished_pieces:
                 break
 
             self.piecesManager.reset_all_pending_blocks(unfinished_pieces)
-            self.peersManager.make_requests(unfinished_pieces)
+            # self.peersManager.make_requests(unfinished_pieces)
 
             # Make WebSeed requests
-            if len(self.peersManager.httpPeers) > self.requestQueue.qsize():
-                for httpPeer in self.peersManager.httpPeers:
+            if 2 * len(self.httpPeers) > self.requestQueue.qsize():
+                for httpPeer in self.httpPeers:
                     pieces = httpPeer.get_pieces(self.piecesManager)
                     if pieces:
                         pieces_by_file = httpPeer.construct_pieces_by_file(pieces)
@@ -64,7 +69,7 @@ class Client(object):
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
         self.piecesManager.requestStop()
-        for httpPeer in self.peersManager.httpPeers:
-            httpPeer.requestStop()
+        for webSeedManager in self.webSeedManagers:
+            webSeedManager.requestStop()
 
         return self.torrent.torrentFile['info']['name']
