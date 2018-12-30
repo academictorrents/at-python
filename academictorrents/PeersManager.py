@@ -73,12 +73,6 @@ class PeersManager(Thread):
                 return peer
         return False
 
-    def getHttpPeer(self):
-        for peer in self.httpPeers:
-            if isinstance(peer, HttpPeer.HttpPeer):
-                return peer
-        return False
-
     def startConnectionToPeers(self):
         for peer in self.peers:
             if not peer.hasHandshaked:
@@ -141,7 +135,6 @@ class PeersManager(Thread):
             # Message is not complete. Return
             if len(payload) < msgLength - 1:
                 return
-
             peer.readBuffer = peer.readBuffer[msgLength + 4:]
             try:
                 peer.idFunction[msgCode](payload)

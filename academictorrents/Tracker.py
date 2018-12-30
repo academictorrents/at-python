@@ -39,19 +39,23 @@ class Tracker(Thread):
         self.setDaemon(True)
         self.downloaded = downloaded
         self.last_message_time = int(datetime.datetime.now().strftime("%s"))
+        self.last_update_time = int(datetime.datetime.now().strftime("%s"))
 
     def requestStop(self):
         self.stopRequested = True
 
-
     def run(self):
         while not self.stopRequested:
             self.getPeersFromTrackers()
-            time.sleep(30)
+            time.sleep(3)
             self.downloading_message()
         self.stop_message()
 
     def getPeersFromTrackers(self):
+        if utils.timestamp_is_within_10_seconds(self.last_update_time):
+            return
+        self.last_update_time = int(datetime.datetime.now().strftime("%s"))
+
         for tracker in self.torrent.announceList:
             if tracker[0] == '':
                 continue

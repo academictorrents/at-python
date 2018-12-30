@@ -1,12 +1,13 @@
 import requests
 from pubsub import pub
 from collections import defaultdict
-
+from threading import Thread
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-class HttpPeer(object):
+class HttpPeer(Thread):
     def __init__(self, torrent, url, requestQueue):
+        Thread.__init__(self)
         self.readBuffer = b""
         self.requestQueue = requestQueue
         self.stopRequested = False
@@ -14,14 +15,16 @@ class HttpPeer(object):
         self.url = url
         self.handshake(url)
         self.sess = requests.Session()
+        self.setDaemon(True)
 
 
     def requestStop(self):
         self.stopRequested = True
 
-    def httpRequest(self):
+    def run(self):
         while not self.stopRequested:
             httpPeer, pieces_by_file = self.requestQueue.get()
+
             responses = httpPeer.request_ranges(pieces_by_file)
             if not responses:
                 continue

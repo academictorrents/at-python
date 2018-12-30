@@ -31,41 +31,39 @@ class Client(object):
         self.peerSeeker.start()
         self.piecesManager.start()
 
-        self.HttpThreads = []
         for url in self.torrent.torrentFile.get('url-list'):
             try:
                 peer = HttpPeer.HttpPeer(self.torrent, url, self.requestQueue)
+                peer.start()
                 self.peersManager.httpPeers.append(peer)
             except Exception:
                 pass
-        for p in self.peersManager.httpPeers:
-            t = Thread(target=p.httpRequest)
-            t.daemon = True
-            t.start()
-            self.HttpThreads.append(t)
 
     def start(self):
-        MAX_PIECES_TO_REQ = 100
+        MAX_BLOCKS_TO_REQ = 50
 
         while not self.piecesManager.are_pieces_completed():
             unfinished_pieces = list(filter(lambda x: x.finished is False, self.piecesManager.pieces))
             for piece in self.piecesManager.pieces:
                 piece.reset_pending_blocks()
+
             if len(self.peersManager.peers) > 0:
-                pieces_requested = 0
+                blocks_requested = 0
                 for piece in unfinished_pieces:
-                    if pieces_requested > MAX_PIECES_TO_REQ:
+                    if blocks_requested > MAX_BLOCKS_TO_REQ:
                         break
-                    peer = self.peersManager.getUnchokedPeer(piece.pieceIndex)
-                    if not peer:
-                        continue
+                    for block in [block for block in piece.blocks if block[0] == "Free"]:
+                        peer = self.peersManager.getUnchokedPeer(piece.pieceIndex)
 
-                    data = piece.getEmptyBlock()
-                    if data:
-                        index, offset, length = data
+                        if not peer:
+                            continue
+                        data = piece.getEmptyBlock()
 
-                        self.peersManager.requestNewPiece(peer, index, offset, length)
-                    pieces_requested += 1
+                        if data:
+                            index, offset, length = data
+                            self.peersManager.requestNewPiece(peer, index, offset, length)
+
+                    blocks_requested += 1
             if len(self.peersManager.httpPeers) > self.requestQueue.qsize():
                 for httpPeer in self.peersManager.httpPeers:
                     pieces = httpPeer.get_pieces(self.piecesManager)
@@ -84,7 +82,7 @@ class Client(object):
         self.peerSeeker.requestStop()
         self.peersManager.requestStop()
         self.piecesManager.requestStop()
-        for t in self.HttpThreads:
-            t.requestStop()
+        for httpPeer in self.peersManager.httpPeers:
+            httpPeer.requestStop()
 
         return self.torrent.torrentFile['info']['name']
