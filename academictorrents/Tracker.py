@@ -98,12 +98,12 @@ class Tracker(Thread):
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
-                event = "completed" if self.remaining == 0 else "stopped"
+                event = "completed" if self.torrent.totalLength == self.downloaded else "stopped"
                 params = {
                     'info_hash': self.torrent.info_hash,
                     'peer_id': self.torrent.peer_id,
                     'uploaded': 0,
-                    'downloaded': self.torrent.totalLength,
+                    'downloaded': self.downloaded,
                     'left': 0,
                     'event': event,
                     'port': 6881
@@ -111,7 +111,6 @@ class Tracker(Thread):
                 try:
                     resp = requests.post(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
-                    print(e)
                     pass
             return params, resp
 
