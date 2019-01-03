@@ -4,26 +4,22 @@ from . import HttpPeer
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class WebSeedManager(Thread):
-    def __init__(self, torrent, requestQueue, httpPeers):
+    def __init__(self, torrent, request_queue, http_peers):
         Thread.__init__(self)
-        self.readBuffer = b""
-        self.requestQueue = requestQueue
-        self.stopRequested = False
+        self.request_queue = request_queue
+        self.stop_requested = False
         self.torrent = torrent
-        self.httpPeers = httpPeers
+        self.http_peers = http_peers
         self.setDaemon(True)
 
     def run(self):
-        while not self.stopRequested:
-            httpPeer, pieces_by_file = self.requestQueue.get()
-            responses = httpPeer.request_ranges(pieces_by_file)
-            if not responses:
+        while not self.stop_requested:
+            httpPeer, filename, pieces = self.request_queue.get()
+            response = httpPeer.request_ranges(filename, pieces)
+            if not response or response.status_code != 206:
                 continue
-            codes = [response[0].status_code for response in responses.values()]
-            if any(code != 206 for code in codes):
-                continue
-            httpPeer.publish_responses(responses, pieces_by_file)
-            self.requestQueue.task_done()
+            httpPeer.publish_responses(response, filename, pieces)
+            self.request_queue.task_done()
 
-    def requestStop(self):
-        self.stopRequested = True
+    def request_stop(self):
+        self.stop_requested = True

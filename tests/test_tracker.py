@@ -14,7 +14,7 @@ class TrackerTestSuite(unittest.TestCase):
     def test_stop_message_already_downloaded(self):
         torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", "./tests/")
         q = Queue()
-        tracker = Tracker.Tracker(torrent, q, torrent.totalLength)
+        tracker = Tracker.Tracker(torrent, q, torrent.total_length)
         self.assertTrue(tracker.stop_message())
 
     def test_stop_message_stopped(self):
@@ -28,7 +28,7 @@ class TrackerTestSuite(unittest.TestCase):
     def test_stop_message_finished(self):
         torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", "./tests/")
         q = Queue()
-        tracker = Tracker.Tracker(torrent, q, torrent.totalLength)
+        tracker = Tracker.Tracker(torrent, q, torrent.total_length)
         params, resp = tracker.stop_message()
         self.assertTrue(resp.status_code == 200)
         self.assertTrue(params['event'] == 'completed')

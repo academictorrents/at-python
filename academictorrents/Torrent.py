@@ -25,27 +25,27 @@ class Torrent(object):
 
         with open("/tmp/" + hash + '.torrent', 'rb') as file:
             contents = file.read()
-        self.torrentFile = bencode.decode(contents)
-        self.totalLength = 0
-        self.pieceLength = self.torrentFile['info']['piece length']
-        self.pieces = self.torrentFile['info']['pieces']
+        self.torrent_file = bencode.decode(contents)
+        self.total_length = 0
+        self.piece_length = self.torrent_file['info']['piece length']
+        self.pieces = self.torrent_file['info']['pieces']
 
-        self.info_hash = utils.sha1_hash(bencode.encode(self.torrentFile['info']))
+        self.info_hash = utils.sha1_hash(bencode.encode(self.torrent_file['info']))
         self.peer_id = self.generate_peer_id()
         self.announceList = self.getTrakers()
-        self.fileNames = []
+        self.filenames = []
 
         self.get_files()
-        if self.totalLength % self.pieceLength == 0:
-            self.numberOfPieces = self.totalLength / self.pieceLength
+        if self.total_length % self.piece_length == 0:
+            self.number_of_pieces = self.total_length / self.piece_length
         else:
-            self.numberOfPieces = int(self.totalLength / self.pieceLength) + 1
+            self.number_of_pieces = int(self.total_length / self.piece_length) + 1
 
         logging.debug(self.announceList)
-        logging.debug(self.fileNames)
+        logging.debug(self.filenames)
 
-        assert(self.totalLength > 0)
-        assert(len(self.fileNames) > 0)
+        assert(self.total_length > 0)
+        assert(len(self.filenames) > 0)
 
     def get_from_file(self):
         try:
@@ -67,29 +67,29 @@ class Torrent(object):
         return contents
 
     def get_files(self):
-        root = self.data_dir + self.torrentFile['info']['name']  # + "/"
-        if 'files' in self.torrentFile['info']:
+        root = self.data_dir + self.torrent_file['info']['name']  # + "/"
+        if 'files' in self.torrent_file['info']:
             if not os.path.exists(root):
                 os.mkdir(root, 0o766)
 
-            for f in self.torrentFile['info']['files']:
+            for f in self.torrent_file['info']['files']:
                 pathFile = os.path.join(root, *f["path"])
 
                 if not os.path.exists(os.path.dirname(pathFile)):
                     os.makedirs(os.path.dirname(pathFile))
 
-                self.fileNames.append({"path": pathFile, "length": f["length"]})
-                self.totalLength += f["length"]
+                self.filenames.append({"path": pathFile, "length": f["length"]})
+                self.total_length += f["length"]
 
         else:
-            self.fileNames.append({"path": root, "length": self.torrentFile['info']['length']})
-            self.totalLength = self.torrentFile['info']['length']
+            self.filenames.append({"path": root, "length": self.torrent_file['info']['length']})
+            self.total_length = self.torrent_file['info']['length']
 
     def getTrakers(self):
-        if 'announce-list' in self.torrentFile:
-            return self.torrentFile['announce-list']
+        if 'announce-list' in self.torrent_file:
+            return self.torrent_file['announce-list']
         else:
-            return [[self.torrentFile['announce']]]
+            return [[self.torrent_file['announce']]]
 
     def generate_peer_id(self):
         seed = str(time.time())

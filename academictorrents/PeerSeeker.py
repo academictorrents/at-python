@@ -6,32 +6,33 @@ from pubsub import pub
 
 
 class PeerSeeker(Thread):
-    def __init__(self, newpeersQueue, torrent):
+    def __init__(self, new_peers_queue, torrent, peer_manager):
         Thread.__init__(self)
-        self.stopRequested = False
-        self.newpeersQueue = newpeersQueue
+        self.stop_requested = False
+        self.peer_manager = peer_manager
+        self.new_peers_queue = new_peers_queue
         self.torrent = torrent
-        self.peerFailed = [("", "")]
         self.setDaemon(True)
         self.reset_time = time.time()
 
-    def requestStop(self):
-        self.stopRequested = True
+    def request_stop(self):
+        self.stop_requested = True
 
     def run(self):
-        while not self.stopRequested:
-
+        failed_peers = []
+        while not self.stop_requested:
             # reset failed peers so we can try again
-            if (time.time() - self.reset_time) > 30:
-                logging.info("Resetting peerFailed list " + str(self.peerFailed))
-                self.peerFailed = [("", "")]
+            if (time.time() - self.reset_time) > 10:
+                failed_peers = []
                 self.reset_time = time.time()
 
-            peer = self.newpeersQueue.get()
-            if not (peer[0], peer[1]) in self.peerFailed:
-                p = Peer.Peer(self.torrent, peer[0], peer[1])
-                if not p.connectToPeer(3):
-                    self.peerFailed.append((peer[0], peer[1]))
-                else:
-                    logging.info(p.ip + ": added new peer")
-                    pub.sendMessage('PeersManager.newPeer', peer=p)
+            peer = self.new_peers_queue.get()
+            peer = Peer.Peer(self.torrent, peer[0], peer[1])
+            extant_peers = [(peer.ip, peer.port) for peer in self.peer_manager.peers]
+            if (peer.ip, peer.port) in failed_peers or (peer.ip, peer.port) in extant_peers:
+                continue
+
+            if peer.connect(5):
+                pub.sendMessage('PeerManager.new_peer', peer=peer)
+            else:
+                failed_peers.append((peer.ip, peer.port))

@@ -6,7 +6,7 @@ import json
 import datetime
 
 
-def convertBytesToDecimal(headerBytes):
+def convert_bytes_to_decimal(headerBytes):
     size = 0
     power = len(headerBytes) - 1
     for ch in headerBytes:

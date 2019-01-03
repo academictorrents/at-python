@@ -28,22 +28,22 @@ class FuncThread(threading.Thread):
 
 
 class Tracker(Thread):
-    def __init__(self, torrent, newpeersQueue, downloaded):
+    def __init__(self, torrent, new_peers_queue, downloaded):
         Thread.__init__(self)
         self.torrent = torrent
         self.lstThreads = []
-        self.newpeersQueue = newpeersQueue
-        self.stopRequested = False
+        self.new_peers_queue = new_peers_queue
+        self.stop_requested = False
         self.setDaemon(True)
         self.downloaded = downloaded
         self.last_message_time = int(datetime.datetime.now().strftime("%s"))
         self.last_update_time = int(datetime.datetime.now().strftime("%s"))
 
-    def requestStop(self):
-        self.stopRequested = True
+    def request_stop(self):
+        self.stop_requested = True
 
     def run(self):
-        while not self.stopRequested:
+        while not self.stop_requested:
             self.getPeersFromTrackers()
             time.sleep(3)
             self.downloading_message()
@@ -70,8 +70,8 @@ class Tracker(Thread):
         for t in self.lstThreads:
             t.join()
 
-    def requestStop(self):
-        self.stopRequested = True
+    def request_stop(self):
+        self.stop_requested = True
 
     def set_downloaded(self, size):
         self.downloaded = size
@@ -82,7 +82,7 @@ class Tracker(Thread):
             'peer_id': torrent.peer_id,
             'uploaded': 0,
             'downloaded': 0,
-            'left': torrent.totalLength,
+            'left': torrent.total_length,
             'event': 'started',
             'port': 6881
         }
@@ -90,7 +90,7 @@ class Tracker(Thread):
             answerTracker = requests.get(tracker, params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
             lstPeers = bencode.decode(answerTracker.content)
             for peer in lstPeers['peers']:
-                self.newpeersQueue.put([peer['ip'], peer['port']])
+                self.new_peers_queue.put([peer['ip'], peer['port']])
         except Exception:
             pass
 
@@ -100,7 +100,7 @@ class Tracker(Thread):
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
-                event = "completed" if self.torrent.totalLength == self.downloaded else "stopped"
+                event = "completed" if self.torrent.total_length == self.downloaded else "stopped"
                 params = {
                     'info_hash': self.torrent.info_hash,
                     'peer_id': self.torrent.peer_id,
@@ -132,7 +132,7 @@ class Tracker(Thread):
                     'peer_id': self.torrent.peer_id,
                     'uploaded': 0,
                     'downloaded': self.downloaded,
-                    'left': self.torrent.totalLength - self.downloaded,
+                    'left': self.torrent.total_length - self.downloaded,
                     'port': 6881
                 }
                 try:
@@ -214,6 +214,6 @@ class Tracker(Thread):
                 ip = ".".join(str(i) for i in raw_bytes[start:end - 2])
                 port = raw_bytes[end - 2:end]
                 port = port[1] + port[0] * 256
-                self.newpeersQueue.put([ip, port])
+                self.new_peers_queue.put([ip, port])
         except Exception:
             pass

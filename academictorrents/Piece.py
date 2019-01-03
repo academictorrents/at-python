@@ -1,95 +1,91 @@
 import math
 import time
 from . import utils
+import itertools
+from collections import defaultdict, OrderedDict
 from pubsub import pub
-
+from . import Block
 BLOCK_SIZE = 2 ** 14
 
 
 class Piece(object):
-    def __init__(self, pieceIndex, pieceSize, pieceHash):
-        self.pieceIndex = pieceIndex
-        self.pieceSize = pieceSize
-        self.pieceHash = pieceHash
-        self.finished = False
+    def __init__(self, index, size, data_hash):
+        self.index = index
+        self.size = size
+        self.data_hash = data_hash
+        self.files_pending = {}
         self.files = []
-        self.pieceData = b""
         self.BLOCK_SIZE = BLOCK_SIZE
-        self.num_blocks = int(math.ceil(float(pieceSize) / BLOCK_SIZE))
         self.blocks = []
         self.init_blocks()
 
     def init_blocks(self):
+        num_full_blocks = int(math.floor(float(self.size) / self.BLOCK_SIZE))
         self.blocks = []
-        for blockIndex in range(self.num_blocks):
-            self.blocks.append(["Free", BLOCK_SIZE, b"", 0, blockIndex])
+        for _ in range(num_full_blocks):
+            self.blocks.append(Block.Block(size=self.BLOCK_SIZE))
+        if (self.size % BLOCK_SIZE) > 0:
+            self.blocks.append(Block.Block(size=self.size % BLOCK_SIZE))
 
-        # Last block of last piece, the special block
-        if (self.pieceSize % BLOCK_SIZE) > 0:
-            self.blocks[self.num_blocks-1][1] = self.pieceSize % BLOCK_SIZE
+    def get_block_statuses(self):
+        return [block.status for block in self.blocks]
 
-    def get_file_offset(self, filename):
-        for f in self.files:
-            if f.get('path').split('/')[-1] == filename:
-                return f.get('fileOffset')
-
-    def get_file_length(self, filename):
-        for f in self.files:
-            if f.get('path').split('/')[-1] == filename:
-                return f.get('length')
-
-    def get_piece_offset(self, filename):
-        for f in self.files:
-            if f.get('path').split('/')[-1] == filename:
-                return f.get('pieceOffset')
-
-    def setBlock(self, offset, data, write=True):
-        if not self.finished:
-            if offset == 0:
-                index = 0
-            else:
-                index = int(offset / BLOCK_SIZE)
-
-            self.blocks[index][2] = data
-            self.blocks[index][0] = "Full"
-            self.isComplete(write=write)
-
-    def get_block(self, block_offset, block_length):
-        return self.pieceData[block_offset:block_length]
-
-    def get_free_blocks(self):
-        free_blocks = []
-        for block in self.blocks:
-            if block[0] == "Free":
-                free_blocks.append(block)
-        return free_blocks
-
-    def getEmptyBlock(self):
-        if not self.finished:
-            blockIndex = 0
-            for block in self.blocks:
-                if block[0] == "Free":
-                    block[0] = "Pending"
-                    block[3] = int(time.time())
-                    return self.pieceIndex, blockIndex * BLOCK_SIZE, block[1]
-                blockIndex += 1
-        return False
+    def set_block(self, offset, data):
+        index = int(offset / BLOCK_SIZE)
+        offset = offset % self.BLOCK_SIZE
+        self.blocks[index].data[offset] = bytearray(data)
+        # print(self.get_block_statuses())
+        if len(data) == self.blocks[index].size:
+            self.blocks[index].status = "Full"
+        else:
+            print("len(data):" + str(len(data)))
+            print("index:" + str(index))
+            print("self.files:" + str(self.files))
+            import pdb; pdb.set_trace()
+            self.blocks[index].status = "Partial"
+            data = bytearray(b"")
+            for b in OrderedDict(sorted(self.blocks[index].data.items())).values():
+                data.extend(b)
+            if len(data) == self.blocks[index].size:
+                self.blocks[index].data = {0: data}
+        if all([block.status == "Full" for block in self.blocks]):
+            # print("complete")
+            self.complete()
 
     def set_all_blocks_pending(self):
         for block in self.blocks:
-            if block[0] == "Free":
-                block[0] = "Pending"
-                block[3] = int(time.time())
+            block.set_pending()
 
-    def set_pending_block(self, block):
-        if block[0] == "Free":
-            block[0] = "Pending"
-            block[3] = int(time.time())
-
-    def freeBlockLeft(self):
+    def reset_pending_blocks(self):
         for block in self.blocks:
-            if block[0] == "Free":
-                return True
+            block.reset_pending()
+
+    def set_file_pending(self, filename):
+        self.files_pending[filename] = time.time()
+
+    def remove_file_pending(self, filename):
+        del self.files_pending[filename]
+
+    def reset_pending_files(self):
+        new_files_pending = {}
+        for filename, timestamp in self.files_pending.items():
+            if(int(time.time()) - timestamp) < 8:
+                new_files_pending[filename] = timestamp
+        self.files_pending = new_files_pending
+
+    def complete(self):
+        # If there is at least one block Free|Pending -> Piece not complete -> return false
+        buf = bytearray(b"")
+        for block in self.blocks:
+            buf.extend(block.data[0])
+        if self.isHashPieceCorrect(buf):
+            self.writeFilesOnDisk(buf)
+            pub.sendMessage('PieceManager.update_bit_field', index=self.index)
+
+
+    def isHashPieceCorrect(self, data):
+        if utils.sha1_hash(data) == self.data_hash:
+            return True
         return False
 
     def isCompleteOnDisk(self):
@@ -99,35 +95,18 @@ class Piece(object):
             try:
                 f_ptr = open(f["path"], 'rb')
             except IOError:
-                all_files_finished = False
                 break
-            f_ptr.seek(f["fileOffset"])
+            f_ptr.seek(f["file_offset"])
             data += f_ptr.read(f["length"])
             f_ptr.close()
             block_offset += f['length']
-        if self.isHashPieceCorrect(data):
-            self.finished = True
-            data = b''
+
+        if data and self.isHashPieceCorrect(data):
+            data = bytearray(b'')
+            for block in self.blocks:
+                block.status = "Full"
             return True
         return False
-
-    def isComplete(self, write=True):
-        # If there is at least one block Free|Pending -> Piece not complete -> return false
-        for block in self.blocks:
-            if block[0] == "Free" or block[0] == "Pending":
-                return False
-        # Before returning True, we must check if hashes match
-        data = self.assembleData()
-        if self.isHashPieceCorrect(data):
-            self.finished = True
-            self.pieceData = data
-            if write:
-                self.writeFilesOnDisk()
-            pub.sendMessage('PiecesManager.PieceCompleted', pieceIndex=self.pieceIndex)
-            return True
-
-        else:
-            return False
 
     def writeFunction(self, pathFile, data, offset):
         try:
@@ -138,35 +117,28 @@ class Piece(object):
         f.write(data)
         f.close()
 
-    def writeFilesOnDisk(self):
+    def writeFilesOnDisk(self, data):
         for f in self.files:
             pathFile = f["path"]
-            fileOffset = f["fileOffset"]
-            pieceOffset = f["pieceOffset"]
+            file_offset = f["file_offset"]
+            piece_offset = f["piece_offset"]
             length = f["length"]
-            self.writeFunction(pathFile, self.pieceData[pieceOffset: pieceOffset + length], fileOffset)
-        self.pieceData = b''
+            self.writeFunction(pathFile, data[piece_offset: piece_offset + length], file_offset)
         for block in self.blocks:
-            block[2] = ''
+            block.data = {0: bytearray(b'')}
 
-    def assembleData(self):
-        buf = b""
-        for block in self.blocks:
-            try:
-                buf += block[2]
-            except Exception:
-                continue
-        return buf
 
-    def isHashPieceCorrect(self, data):
-        if utils.sha1_hash(data) == self.pieceHash:
-            return True
-        else:
-            self.init_blocks()
-            return False
+    def get_file_offset(self, filename):
+        for f in self.files:
+            if f.get('path').split('/')[-1] == filename:
+                return f.get('file_offset')
 
-    def reset_pending_blocks(self):
-        for block in self.blocks:
-            if(int(time.time()) - block[3]) > 2 and block[0] == "Pending":
-                block[0] = "Free"
-                block[3] = 0
+    def get_length(self, filename):
+        for f in self.files:
+            if f.get('path').split('/')[-1] == filename:
+                return f.get('length')
+
+    def get_offset(self, filename):
+        for f in self.files:
+            if f.get('path').split('/')[-1] == filename:
+                return math.floor(f.get('piece_offset'))
