@@ -28,7 +28,6 @@ class Client(object):
 
     def start(self):
         rate = 10000000
-        t = self.start_time
         while not self.pieces_manager.finished():
             self.pieces_manager.reset_pending()
             pieces_by_file = self.pieces_manager.pieces_by_file()

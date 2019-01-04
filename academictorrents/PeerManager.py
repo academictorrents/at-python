@@ -19,7 +19,7 @@ class PeerManager(Thread):
         self.peers = []
         self.http_peers = []
         self.web_seed_managers = []
-        self.request_queue = Queue(maxsize=10)
+        self.request_queue = Queue()
         self.torrent = torrent
         self.pieces_manager = pieces_manager
         self.rarestPieces = RarestPieces.RarestPieces(pieces_manager)
@@ -36,7 +36,7 @@ class PeerManager(Thread):
                 continue
             self.http_peers.append(peer)
 
-        num_web_seed_managers = 1#len(self.http_peers) * 5
+        num_web_seed_managers = len(self.http_peers) * 5
         for i in range(num_web_seed_managers):
             t = WebSeedManager(torrent, self.request_queue, self.http_peers)
             t.start()
@@ -164,16 +164,19 @@ class PeerManager(Thread):
 
     def enqueue_http_requests(self, pieces_by_file):
         i = 0
+        if not self.request_queue.empty():
+            return
         while pieces_by_file:
             filename, pieces_containing_file = pieces_by_file.pop()
+            print(filename)
             for pieces in grouper(pieces_containing_file, 25):
                 pieces = [piece for piece in pieces if piece] # only truthy pieces
-                if i > len(self.web_seed_managers):
-                    return
                 self.pieces_manager.set_pending(filename, pieces)
                 peer = self.http_peers[i % len(self.http_peers)]
-                self.request_queue.put((peer, filename, pieces))
+                print("enqueued")
+                self.request_queue.put((peer, filename, pieces), False)
                 i += 1
+
 
 
 def grouper(iterable, n, fillvalue=None):

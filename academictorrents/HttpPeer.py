@@ -41,20 +41,14 @@ class HttpPeer(object):
         for piece in pieces:
             end += piece.get_length(filename)
         try:
-            return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False)
+            return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=3)
         except Exception as e:
+            print(e)
             return False
 
     def publish_responses(self, response, filename, pieces):
-        response_offset = 0
+        offset = 0
         for piece in pieces:
-            data_length = piece.get_length(filename)
-            data = response.content[response_offset: response_offset + data_length]
-            response_offset += data_length
-            offset = int(piece.get_offset(filename))
-            import pdb; pdb.set_trace()
-            for idx in range(int(math.ceil(data_length/piece.BLOCK_SIZE))):
-                size = piece.blocks[idx].size
-                start = idx * piece.BLOCK_SIZE
-                pub.sendMessage('PiecesManager.receive_block_piece', piece=(piece.index, offset, data[start: start + size]))
-                offset += size
+            size = piece.get_length(filename)
+            pub.sendMessage('PieceManager.receive_file', piece=(piece.index, filename, response.content[offset: offset + size]))
+            offset += size

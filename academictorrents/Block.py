@@ -5,14 +5,25 @@ class Block(object):
     def __init__(self, size, time=time.time(), status="Free", data=None):
         self.size = size
         self.status = status
+        self.pending = False
         self.data = defaultdict(list)
         self.time = time
 
+    def assemble_data(self):
+        buf = bytearray(self.size)
+        length = 0
+        for index, data in self.data.items():
+            buf[index: index + len(data)] = data
+            length += len(data)
+        if length != self.size:
+            return bytearray(b"")
+        return buf
+
     def set_pending(self):
-        self.status = "Pending"
+        self.pending = True
         self.time = int(time.time())
 
     def reset_pending(self):
-        if(int(time.time()) - self.time) > 8 and self.status == "Pending":
-            self.status = "Free"
+        if(int(time.time()) - self.time) > 8:
+            self.pending = False
             self.time = 0

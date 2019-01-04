@@ -14,6 +14,7 @@ class Piece(object):
         self.size = size
         self.data_hash = data_hash
         self.files_pending = {}
+        self.files_finished = {}
         self.files = []
         self.BLOCK_SIZE = BLOCK_SIZE
         self.blocks = []
@@ -30,27 +31,56 @@ class Piece(object):
     def get_block_statuses(self):
         return [block.status for block in self.blocks]
 
+    def set_file(self, filename, data):
+        index = int(self.get_offset(filename) / BLOCK_SIZE)
+        offset = self.get_offset(filename) % self.BLOCK_SIZE
+        done = 0
+        while done != len(data):
+            if offset != 0:
+                self.blocks[index].status = "Partial"
+                amount = min(self.BLOCK_SIZE - offset, len(data))
+            elif len(data) - done < self.blocks[index].size:
+                self.blocks[index].status = "Partial"
+                amount = len(data) - done
+            else:
+                self.blocks[index].status = "Full"
+                amount = self.blocks[index].size if len(data) - done > self.BLOCK_SIZE else len(data) - done
+            self.blocks[index].data[offset] = data[done: done + amount]
+
+            # increment counts
+            done += amount
+            offset = (offset + amount) % self.BLOCK_SIZE
+            index += 1
+        self.try_complete()
+
+    def try_complete(self):
+        if all([block.status == "Full" or block.status == "Partial" for block in self.blocks]):
+            print("all or partial")
+            buf = bytearray(b"")
+            for index in range(len(self.blocks)):
+                buf.extend(self.blocks[index].assemble_data())
+            if len(buf) == self.size:
+                print("full")
+
+                if utils.sha1_hash(buf) == self.data_hash:
+                    for filename in self.files_pending:
+                        self.add_file_finished(filename)
+                    self.files_pending = {}
+
+                    print("correct")
+                    self.writeFilesOnDisk(buf)
+                    pub.sendMessage('PieceManager.update_bitfield', index=self.index)
+                else:
+                    print("resetting,...")
+                    self.files_pending = {}
+                    # self.reset_pending_blocks()
+                    # self.init_blocks()
+
     def set_block(self, offset, data):
         index = int(offset / BLOCK_SIZE)
-        offset = offset % self.BLOCK_SIZE
         self.blocks[index].data[offset] = bytearray(data)
-        # print(self.get_block_statuses())
-        if len(data) == self.blocks[index].size:
-            self.blocks[index].status = "Full"
-        else:
-            print("len(data):" + str(len(data)))
-            print("index:" + str(index))
-            print("self.files:" + str(self.files))
-            import pdb; pdb.set_trace()
-            self.blocks[index].status = "Partial"
-            data = bytearray(b"")
-            for b in OrderedDict(sorted(self.blocks[index].data.items())).values():
-                data.extend(b)
-            if len(data) == self.blocks[index].size:
-                self.blocks[index].data = {0: data}
-        if all([block.status == "Full" for block in self.blocks]):
-            # print("complete")
-            self.complete()
+        self.blocks[index].status = "Full"
+        self.try_complete()
 
     def set_all_blocks_pending(self):
         for block in self.blocks:
@@ -64,29 +94,13 @@ class Piece(object):
         self.files_pending[filename] = time.time()
 
     def remove_file_pending(self, filename):
-        del self.files_pending[filename]
+        try:
+            del self.files_pending[filename]
+        except KeyError:
+            pass
 
-    def reset_pending_files(self):
-        new_files_pending = {}
-        for filename, timestamp in self.files_pending.items():
-            if(int(time.time()) - timestamp) < 8:
-                new_files_pending[filename] = timestamp
-        self.files_pending = new_files_pending
-
-    def complete(self):
-        # If there is at least one block Free|Pending -> Piece not complete -> return false
-        buf = bytearray(b"")
-        for block in self.blocks:
-            buf.extend(block.data[0])
-        if self.isHashPieceCorrect(buf):
-            self.writeFilesOnDisk(buf)
-            pub.sendMessage('PieceManager.update_bit_field', index=self.index)
-
-
-    def isHashPieceCorrect(self, data):
-        if utils.sha1_hash(data) == self.data_hash:
-            return True
-        return False
+    def add_file_finished(self, filename):
+        self.files_finished[filename] = True
 
     def isCompleteOnDisk(self):
         block_offset = 0
@@ -101,7 +115,7 @@ class Piece(object):
             f_ptr.close()
             block_offset += f['length']
 
-        if data and self.isHashPieceCorrect(data):
+        if data and utils.sha1_hash(data) == self.data_hash:
             data = bytearray(b'')
             for block in self.blocks:
                 block.status = "Full"

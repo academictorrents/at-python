@@ -5,6 +5,8 @@ from threading import Thread
 from pubsub import pub
 from . import progress_bar
 from collections import defaultdict
+import math
+import random
 
 
 class PieceManager(Thread):
@@ -17,14 +19,14 @@ class PieceManager(Thread):
         self.bitfield = bitstring.BitArray(self.number_of_pieces)
         self.pieces = self.generate_pieces()
         self.files = self.get_files()
-        for file in self.files:
-            id_piece = file['id_piece']
-            self.pieces[id_piece].files.append(file)
+        for f in self.files:
+            id_piece = f['id_piece']
+            self.pieces[id_piece].files.append(f)
 
         # Create events
         pub.subscribe(self.receive_block, 'PieceManager.receive_block')
         pub.subscribe(self.receive_file, 'PieceManager.receive_file')
-        pub.subscribe(self.update_bit_field, 'PieceManager.update_bit_field')
+        pub.subscribe(self.update_bitfield, 'PieceManager.update_bitfield')
 
     def request_stop(self):
         self.stop_requested = True
@@ -53,7 +55,7 @@ class PieceManager(Thread):
                     b += block.size
         return b
 
-    def update_bit_field(self, index):
+    def update_bitfield(self, index):
         self.bitfield[index] = 1
 
     def receive_block(self, piece):
@@ -61,24 +63,22 @@ class PieceManager(Thread):
         self.pieces[index].set_block(offset, data)
 
     def receive_file(self, piece):
-        index, offset, data = piece
-        self.pieces[index].set_file(offset, data)
+        index, filename, data = piece
+        self.pieces[index].set_file(filename, data)
 
     def reset_pending(self):
         for piece in self.pieces:
             for block in piece.blocks:
                 block.reset_pending()
-            piece.reset_pending_files()
 
     def set_pending(self, filename, pieces):
         for piece in pieces:
-            start_loc = piece.get_file_offset(filename)
-            end_loc = piece.get_length(filename)
-            for index, block in enumerate(piece.blocks):
-                offset = index * block.size
-                if offset < end_loc and offset >= start_loc:
-                    block.set_pending()
-                    piece.set_file_pending(filename)
+            cur = int(math.floor(piece.get_offset(filename)/piece.BLOCK_SIZE))
+            last = int(math.floor((piece.get_length(filename) + piece.get_offset(filename))/piece.BLOCK_SIZE))
+            piece.set_file_pending(filename)
+            while cur < last:
+                piece.blocks[cur].set_pending()
+                cur += 1
 
     def pieces_by_file(self, reverse=False):
         pieces_by_file = defaultdict(list)
@@ -86,10 +86,21 @@ class PieceManager(Thread):
         for piece in pieces:
             for f in piece.files:
                 filename = f.get('path').split('/')[-1]
-                if filename not in piece.files_pending:
+                timestamp = piece.files_pending.get(filename, 0)
+                if int(time.time() - timestamp) > 8 and filename not in piece.files_finished.keys():
                     pieces_by_file[filename].append(piece)
+                # if int(time.time() - timestamp) > 8 :
+                #     print("timestamp")
+                # if filename not in piece.files_finished.keys() :
+                #     print("files_finished")
+        # if random.random() > 0.9:
+        #     pieces_by_file = defaultdict(list)
+        #     for piece in pieces:
+        #         for f in piece.files:
+        #             filename = f.get('path').split('/')[-1]
+        #             pieces_by_file[filename].append(piece)
         sorted_by_length = sorted(pieces_by_file.items(), key=lambda k_v: len(k_v[1]), reverse=reverse)
-        return sorted_by_length
+        return sorted_by_length #[item for item in pieces_by_file.items()]
 
     def check_disk_pieces(self):
         i = 0
