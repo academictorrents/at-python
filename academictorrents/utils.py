@@ -30,22 +30,10 @@ def get_timestamp_filename():
 def clean_path(datastore=None):
     if not datastore:
         return os.getcwd() + "/datastore/"
-    if datastore == "~" or datastore == "~/":
-        return os.path.expanduser("~/")
-    if datastore[-1] != "/":
-        datastore = datastore + "/"
-    if datastore.startswith("~/"):
-        return os.path.expanduser(datastore)
     if datastore.startswith("~"):
-        return os.path.expanduser("~/" + datastore[2:])
-    if datastore == "./":
-        return os.getcwd() + "/"
-    if datastore.startswith("./"):
-        return os.getcwd() + "/" + datastore[2:]
-    if datastore.startswith("/"):
-        return datastore
+        return os.path.expanduser(datastore) + "/"
     else:
-        return os.getcwd() + "/" + datastore
+        return os.path.abspath(datastore) + "/"
 
 
 def write_timestamp(at_hash):

@@ -40,6 +40,10 @@ class UtilsTestSuite(unittest.TestCase):
         path = utils.clean_path("~/mycooldatastore")
         self.assertTrue(path == home + "/mycooldatastore/")
 
+    def test_relative_back(self):
+        path = utils.clean_path("..")
+        self.assertTrue(path == os.path.abspath("..") + "/")
+
     def test_write_timestamp(self):
         utils.write_timestamp("55a8925a8d546b9ca47d309ab438b91f7959e77f")
         timestamp = utils.read_timestamp("55a8925a8d546b9ca47d309ab438b91f7959e77f")
