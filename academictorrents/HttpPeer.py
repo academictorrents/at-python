@@ -7,32 +7,10 @@ import logging
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class HttpPeer(object):
-    def __init__(self, torrent, url):
-        self.torrent = torrent
+    def __init__(self, url):
         self.url = url
         self.sess = requests.Session()
-        self.accepts_ranges = self.handshake(url)
         self.fail_files = []
-
-    def handshake(self, url):
-        if not url:
-            return False
-        resp = requests.head(url)
-        if resp.headers.get('Accept-Ranges', False):  # if it was a full-url
-            self.url = '/'.join(url.split('/')[0:-1]) + '/'
-            return True
-        else:  # maybe we need to construct a full-url
-            directory = self.torrent.contents.get('info', {}).get('name')
-            some_filename = self.torrent.contents.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
-            if url[-1] == '/':
-                compound_url = url + directory + '/'
-            else:
-                compound_url = url + '/' + directory + '/'
-            resp = requests.head(compound_url + some_filename)
-            if resp.headers.get('Accept-Ranges', False):  # if it wasn't a full-url
-                self.url = compound_url
-                return True
-        return False
 
     def request_ranges(self, filename, pieces):
         start = pieces[0].get_file_offset(filename)

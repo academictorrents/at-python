@@ -9,7 +9,6 @@ from os.path import expanduser
 home = expanduser("~")
 
 
-
 class UtilsTestSuite(unittest.TestCase):
     """Test cases on the utils.py file."""
     def test_clean_path(self):

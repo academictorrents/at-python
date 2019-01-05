@@ -36,8 +36,6 @@ class Piece(object):
             index = int(self.get_offset(filename) / BLOCK_SIZE)
             offset = int(self.get_offset(filename) % self.BLOCK_SIZE)
         except Exception:
-            print(filename)
-            print(self.files)
             return
         done = 0
         while done != len(data):
@@ -140,7 +138,6 @@ class Piece(object):
             self.writeFunction(pathFile, data[piece_offset: piece_offset + length], file_offset)
         for block in self.blocks:
             block.data = {0: bytearray(b'')}
-
 
     def get_file_offset(self, filename):
         for f in self.files:

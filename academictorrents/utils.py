@@ -1,5 +1,3 @@
-__author__ = 'martin weiss, alexis gallepe'
-
 import hashlib
 import os
 import json
