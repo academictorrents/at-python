@@ -25,6 +25,16 @@ class PieceManager(object):
         pub.subscribe(self.receive_file, 'PieceManager.receive_file')
         pub.subscribe(self.update_bitfield, 'PieceManager.update_bitfield')
 
+
+    def close(self):
+        pub.unsubAll("PieceManager.receive_block")
+        pub.unsubAll("PieceManager.receive_file")
+        pub.unsubAll("PieceManager.update_bitfield")
+        self.torrent = None
+        self.bitfield = None
+        self.pieces = None
+        self.files = None
+
     def finished(self):
         if sum(self.bitfield) == self.number_of_pieces:
             return True
@@ -54,7 +64,10 @@ class PieceManager(object):
 
     def receive_file(self, piece):
         index, filename, data = piece
-        self.pieces[index].set_file(filename, data)
+        try:
+            self.pieces[index].set_file(filename, data)
+        except Exception:
+            pass
 
     def reset_pending(self):
         for piece in self.pieces:

@@ -8,6 +8,10 @@ from academictorrents import Torrent
 
 class TorrentTestSuite(unittest.TestCase):
     """Test cases on the torrent.py file."""
+    def test_get_file_http(self):
+        filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f')
+        self.assertTrue(os.path.isfile(filename))
+        time.sleep(3)
 
     def test_load_from_file(self):
         contents = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", data_dir="./tests/").get_from_file()

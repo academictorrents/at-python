@@ -36,6 +36,8 @@ class Piece(object):
             index = int(self.get_offset(filename) / BLOCK_SIZE)
             offset = int(self.get_offset(filename) % self.BLOCK_SIZE)
         except Exception:
+            print(filename)
+            print(self.files)
             return
         done = 0
         while done != len(data):

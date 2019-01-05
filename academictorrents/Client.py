@@ -48,8 +48,9 @@ class Client(object):
             self.tracker.set_downloaded(cur_downloaded)
             time.sleep(0.5)
 
+        cur_downloaded = self.piece_manager.check_finished_pieces()
         print("\n Complete. Downloaded " + str(cur_downloaded/1000000.) + " MB in " + str(time.time()-self.start_time) + " seconds.")
-        self.piece_manager = None
+        self.piece_manager.close()
         self.tracker.request_stop()
         self.peer_seeker.request_stop()
         self.peer_manager.request_stop()
