@@ -18,8 +18,7 @@ class PeerDownloadTestSuite(unittest.TestCase):
         path = at.get('b79869ca12787166de88311ca1f28e3ebec12dec')  # test torrent
         files = os.listdir(path)
         self.assertTrue(len(files) == 174)
-        datastore = os.getcwd() + "/datastore/"
-        os.remove(datastore + "/BreastCancerCell_dataset/ytma55_030603_benign2.TIF")
+        os.remove(path + "/ytma55_030603_benign2.TIF")
         files = os.listdir(path)
         self.assertTrue(len(files) == 173)
         path = at.get('b79869ca12787166de88311ca1f28e3ebec12dec')  # test torrent
