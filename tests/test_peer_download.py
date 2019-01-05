@@ -10,7 +10,6 @@ class PeerDownloadTestSuite(unittest.TestCase):
     """Test cases on the academictorrents.py file."""
 
     def test_get_multiple_files(self):
-        import pdb; pdb.set_trace()
         path = at.get('b79869ca12787166de88311ca1f28e3ebec12dec')
         files = os.listdir(path)
         self.assertTrue(len(files) == 174)
@@ -35,6 +34,10 @@ class PeerDownloadTestSuite(unittest.TestCase):
         filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb')
         self.assertTrue(os.path.isfile(filename))
 
+    def test_get_file_http(self):
+        filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f')
+        self.assertTrue(os.path.isfile(filename))
+        time.sleep(3)
 
 if __name__ == '__main__':
     unittest.main()

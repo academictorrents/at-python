@@ -1,12 +1,12 @@
 from pubsub import pub
 
 class RarestPieces(object):
-    def __init__(self, pieces_manager):
+    def __init__(self, piece_manager):
 
-        self.pieces_manager = pieces_manager
+        self.piece_manager = piece_manager
         self.rarestPieces = []
 
-        for pieceNumber in range(self.pieces_manager.number_of_pieces):
+        for pieceNumber in range(self.piece_manager.number_of_pieces):
             PeersByPiece = {"id_piece":pieceNumber, "numberOfPeers":0, "peers":[]}
             self.rarestPieces.append(PeersByPiece)
 

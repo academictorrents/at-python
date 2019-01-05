@@ -29,14 +29,14 @@ def get(path, datastore=None, name=None, showlogs=False):
         if timestamp_is_within_30_days(timestamp) and filenames_present(torrent, datastore):
             return torrent_dir + torrent.torrent_file['info']['name']
 
-        pieces_manager = PieceManager(torrent)
-        pieces_manager.check_disk_pieces()
-        downloaded_amount = pieces_manager.check_finished_pieces()
+        piece_manager = PieceManager(torrent)
+        piece_manager.check_disk_pieces()
+        downloaded_amount = piece_manager.check_finished_pieces()
 
         if float(downloaded_amount) / torrent.total_length == 1.0:
             return torrent_dir + torrent.torrent_file['info']['name']
 
-        client = Client(torrent, downloaded_amount, pieces_manager)
+        client = Client(torrent, downloaded_amount, piece_manager)
         downloaded_path = client.start()
         write_timestamp(path)
 

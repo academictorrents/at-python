@@ -32,8 +32,11 @@ class Piece(object):
         return [block.status for block in self.blocks]
 
     def set_file(self, filename, data):
-        index = int(self.get_offset(filename) / BLOCK_SIZE)
-        offset = int(self.get_offset(filename) % self.BLOCK_SIZE)
+        try:
+            index = int(self.get_offset(filename) / BLOCK_SIZE)
+            offset = int(self.get_offset(filename) % self.BLOCK_SIZE)
+        except Exception:
+            return
         done = 0
         while done != len(data):
             if offset != 0:

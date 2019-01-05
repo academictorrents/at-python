@@ -16,10 +16,6 @@ class HttpPeerTestSuite(unittest.TestCase):
         assert True
 
     def test_get_pieces(self):
-        # TODO: rewrite piecesmanager to be instantiable without an internet connection cause I'm on a freakin' plane.
-        torrent_dir = "tests/"
-        torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir)
-        pieces_manager = PieceManager.PieceManager(torrent)
         assert True
 
     # TODO: request_ranges

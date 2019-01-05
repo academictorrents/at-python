@@ -9,12 +9,9 @@ import math
 import random
 
 
-class PieceManager(Thread):
+class PieceManager(object):
     def __init__(self, torrent):
-        Thread.__init__(self)
         self.torrent = torrent
-        self.stop_requested = False
-
         self.number_of_pieces = torrent.number_of_pieces
         self.bitfield = bitstring.BitArray(self.number_of_pieces)
         self.pieces = self.generate_pieces()
@@ -27,13 +24,6 @@ class PieceManager(Thread):
         pub.subscribe(self.receive_block, 'PieceManager.receive_block')
         pub.subscribe(self.receive_file, 'PieceManager.receive_file')
         pub.subscribe(self.update_bitfield, 'PieceManager.update_bitfield')
-
-    def request_stop(self):
-        self.stop_requested = True
-
-    def run(self):
-        while not self.stop_requested:
-            pass
 
     def finished(self):
         if sum(self.bitfield) == self.number_of_pieces:

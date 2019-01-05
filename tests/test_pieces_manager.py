@@ -19,13 +19,13 @@ class PieceManagerTestSuite(unittest.TestCase):
         torrent.piece_length = 4
         torrent.filenames = [{'length': 12, 'path': 'tests/vangogh.tar.gz'}]
         torrent.pieces = b"\xae\x04\xf4\xbaT\xb8\xe2O\xa6!\xfa\xf4\x97\x94+\x86"
-        pieces_manager = PieceManager.PieceManager(torrent)
-        self.assertTrue(len(pieces_manager.pieces) == 3)
-        self.assertTrue(len(pieces_manager.pieces[0].files) == 1)
-        self.assertTrue(pieces_manager.pieces[0].files[0].get('piece_offset')==0)
-        self.assertTrue(pieces_manager.pieces[1].files[0].get('piece_offset')==0)
-        self.assertTrue(pieces_manager.pieces[2].files[0].get('piece_offset')==0)
+        piece_manager = PieceManager.PieceManager(torrent)
+        self.assertTrue(len(piece_manager.pieces) == 3)
+        self.assertTrue(len(piece_manager.pieces[0].files) == 1)
+        self.assertTrue(piece_manager.pieces[0].files[0].get('piece_offset')==0)
+        self.assertTrue(piece_manager.pieces[1].files[0].get('piece_offset')==0)
+        self.assertTrue(piece_manager.pieces[2].files[0].get('piece_offset')==0)
 
-        self.assertTrue(pieces_manager.pieces[0].files[0].get('file_offset')==0)
-        self.assertTrue(pieces_manager.pieces[1].files[0].get('file_offset')==4)
-        self.assertTrue(pieces_manager.pieces[2].files[0].get('file_offset')==8)
+        self.assertTrue(piece_manager.pieces[0].files[0].get('file_offset')==0)
+        self.assertTrue(piece_manager.pieces[1].files[0].get('file_offset')==4)
+        self.assertTrue(piece_manager.pieces[2].files[0].get('file_offset')==8)

@@ -11,38 +11,29 @@ from threading import Thread
 from pubsub import pub
 from . import utils
 from . import RarestPieces
-from . import Peer
-from .WebSeedManager import WebSeedManager
 from .HttpPeer import HttpPeer
 
 
 class PeerManager(Thread):
-    def __init__(self, torrent, pieces_manager):
+    def __init__(self, torrent, piece_manager, request_queue):
         Thread.__init__(self)
         self.peers = []
         self.http_peers = []
-        self.web_seed_managers = []
-        self.request_queue = Queue()
+        self.request_queue = request_queue
         self.torrent = torrent
-        self.pieces_manager = pieces_manager
-        self.rarestPieces = RarestPieces.RarestPieces(pieces_manager)
+        self.piece_manager = piece_manager
+        self.rarestPieces = RarestPieces.RarestPieces(piece_manager)
         self.stop_requested = False
         self.setDaemon(True)
 
         self.pieces_by_peer = []
-        for i in range(self.pieces_manager.number_of_pieces):
+        for i in range(self.piece_manager.number_of_pieces):
             self.pieces_by_peer.append([0, []])
 
         for url in self.torrent.torrent_file.get('url-list'):
             peer = HttpPeer(self.torrent, url)
             if peer.accepts_ranges:
                 self.http_peers.append(peer)
-
-        num_web_seed_managers = len(self.http_peers) * 5
-        for i in range(num_web_seed_managers):
-            t = WebSeedManager(torrent, self.request_queue, self.http_peers)
-            t.start()
-            self.web_seed_managers.append(t)
 
         # Events
         pub.subscribe(self.add_peer, 'PeerManager.new_peer')
@@ -84,8 +75,6 @@ class PeerManager(Thread):
                     payload = peer.buffer[5:4 + msg_length]
                     peer.buffer = peer.buffer[4 + msg_length:]
                     peer.id_function[msg_code](payload)
-        for web_seed_manager in self.web_seed_managers:
-            web_seed_manager.request_stop()
 
     def request_stop(self):
         self.stop_requested = True
@@ -149,7 +138,7 @@ class PeerManager(Thread):
         i = 0
         if not self.peers:
             return
-        #pieces_by_file = self.pieces_manager.pieces_by_file(reverse=True)
+        #pieces_by_file = self.piece_manager.pieces_by_file(reverse=True)
         pieces = [pieces for _, pieces in pieces_by_file for pieces in pieces]
         while i < len(pieces) and requests < max_requests:
             piece = pieces[i]
@@ -172,7 +161,7 @@ class PeerManager(Thread):
             filename, pieces_containing_file = pieces_by_file.pop()
             for pieces in grouper(pieces_containing_file, 25):
                 pieces = [piece for piece in pieces if piece] # only truthy pieces
-                self.pieces_manager.set_pending(filename, pieces)
+                self.piece_manager.set_pending(filename, pieces)
                 for peer in self.http_peers:
                     if filename not in peer.fail_files:
                         self.request_queue.put((peer, filename, pieces), False)

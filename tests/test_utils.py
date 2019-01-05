@@ -74,3 +74,9 @@ class UtilsTestSuite(unittest.TestCase):
         torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", data_dir=torrent_dir).get_from_file()
         ret = utils.filenames_present(torrent, torrent_dir)
         self.assertTrue(ret)
+
+    # Test with different datastore
+    def test_different_datastore(self):
+        filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore=os.getcwd() + '/datastore/alt/')
+        assert filename == os.getcwd() + '/datastore/alt/mnist.pkl.gz'
+        self.assertTrue(os.path.isfile(filename))
