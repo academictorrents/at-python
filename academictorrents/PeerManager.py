@@ -159,7 +159,6 @@ class PeerManager(Thread):
         while pieces_by_file:
             filename, pieces_containing_file = pieces_by_file.pop()
             for pieces in grouper(pieces_containing_file):
-                pieces = [piece for piece in pieces if piece] # only truthy pieces
                 self.piece_manager.set_pending(filename, pieces)
                 for peer in self.http_peers:
                     if filename not in peer.fail_files:
@@ -178,4 +177,9 @@ def grouper(pieces):
             temp_pieces = []
         length += piece.size
     resp.append(temp_pieces)
+
+    # now we have a list of piece lists
+    for idx, pieces in enumerate(resp):
+        resp[idx] = [piece for piece in pieces if piece]
+    resp = resp if resp[0] else []
     return resp

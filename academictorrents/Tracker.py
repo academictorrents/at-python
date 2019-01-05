@@ -45,7 +45,7 @@ class Tracker(Thread):
     def run(self):
         while not self.stop_requested:
             self.getPeersFromTrackers()
-            time.sleep(3)
+            time.sleep(10)
             self.downloading_message()
         self.stop_message()
 
@@ -59,11 +59,12 @@ class Tracker(Thread):
                 continue
             elif tracker[0][:4] == "http":
                 t1 = FuncThread(self.scrapeHTTP, self.torrent, tracker[0])
+                t1.setDaemon(True)
                 self.lstThreads.append(t1)
                 t1.start()
             else:
-                # self.scrape_udp(self.torrent, tracker[0])
                 t2 = FuncThread(self.scrape_udp, self.torrent, tracker[0])
+                t2.setDaemon(True)
                 self.lstThreads.append(t2)
                 t2.start()
 
@@ -87,11 +88,12 @@ class Tracker(Thread):
             'port': 6881
         }
         try:
-            answerTracker = requests.get(tracker, params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+            answerTracker = requests.get(tracker, params=params, timeout=5, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
             lstPeers = bencode.decode(answerTracker.content)
             for peer in lstPeers['peers']:
                 self.new_peers_queue.put([peer['ip'], peer['port']])
-        except Exception:
+        except Exception as e:
+            logging.info(e)
             pass
 
     def stop_message(self):
@@ -111,7 +113,7 @@ class Tracker(Thread):
                     'port': 6881
                 }
                 try:
-                    resp = requests.post(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.post(tracker[0], params=params, timeout=5, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
                     pass
             return params, resp
@@ -136,9 +138,9 @@ class Tracker(Thread):
                     'port': 6881
                 }
                 try:
-                    resp = requests.get(tracker[0], params=params, timeout=20, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.get(tracker[0], params=params, timeout=5, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
-                    print(e)
+                    logging.info(e)
                     pass
             return params, resp
 
@@ -172,7 +174,7 @@ class Tracker(Thread):
         try:
             response = sock.recv(2048)
         except socket.timeout as err:
-            logging.debug(err)
+            logging.info(err)
             return
             # logging.debug("Connecting again...")
             # return self.send_msg(conn, sock, msg, trans_id, action, size)

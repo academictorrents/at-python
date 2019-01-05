@@ -34,7 +34,6 @@ class Client(object):
             self.web_seed_managers.append(t)
 
     def start(self):
-        rate = 10000000
         while not self.piece_manager.finished():
             self.piece_manager.reset_pending()
             pieces_by_file = self.piece_manager.pieces_by_file()
@@ -49,6 +48,8 @@ class Client(object):
             time.sleep(0.1)
 
         cur_downloaded = self.piece_manager.check_finished_pieces()
+        progress_bar.print_progress(cur_downloaded, self.torrent.total_length, "BT:{}, Web:{}".format(len(self.peer_manager.peers), len(self.peer_manager.http_peers)), "({0:.2f}kB/s)".format(rate)) # + " Downloaded " + str(round(cur_downloaded/1000000., 2)) + "MB" )
+
         print("\n Download Complete!") # . Downloaded " + str(cur_downloaded/1000000.) + " MB in " + str(time.time()-self.start_time) + " seconds.")
         self.piece_manager.close()
         self.tracker.request_stop()

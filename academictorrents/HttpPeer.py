@@ -3,6 +3,7 @@ import math
 from pubsub import pub
 from threading import Thread
 import urllib3
+import logging
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class HttpPeer(object):
@@ -39,9 +40,9 @@ class HttpPeer(object):
         for piece in pieces:
             end += piece.get_length(filename)
         try:
-            return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=3)
+            return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=5)
         except Exception as e:
-            print(e)
+            logging.info(str(e))
             return False
 
     def publish_responses(self, response, filename, pieces):

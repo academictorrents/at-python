@@ -92,18 +92,8 @@ class PieceManager(object):
                 timestamp = piece.files_pending.get(filename, 0)
                 if int(time.time() - timestamp) > 1 and filename not in piece.files_finished.keys():
                     pieces_by_file[filename].append(piece)
-                # if int(time.time() - timestamp) > 8 :
-                #     print("timestamp")
-                # if filename not in piece.files_finished.keys() :
-                #     print("files_finished")
-        # if random.random() > 0.9:
-        #     pieces_by_file = defaultdict(list)
-        #     for piece in pieces:
-        #         for f in piece.files:
-        #             filename = f.get('path').split('/')[-1]
-        #             pieces_by_file[filename].append(piece)
         sorted_by_length = sorted(pieces_by_file.items(), key=lambda k_v: len(k_v[1]), reverse=reverse)
-        return sorted_by_length #[item for item in pieces_by_file.items()]
+        return sorted_by_length
 
     def check_disk_pieces(self):
         i = 0

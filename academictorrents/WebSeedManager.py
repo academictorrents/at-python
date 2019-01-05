@@ -15,6 +15,9 @@ class WebSeedManager(Thread):
     def run(self):
         while not self.stop_requested:
             httpPeer, filename, pieces = self.request_queue.get()
+            if not pieces:
+                self.request_queue.task_done()
+                continue
             response = httpPeer.request_ranges(filename, pieces)
             if not response or response.status_code != 206:
                 httpPeer.fail_files.append(filename)

@@ -20,7 +20,10 @@ class Torrent(object):
         if not os.path.isdir(self.data_dir):
             os.makedirs(self.data_dir)
 
-        if not self.get_from_url() and not self.get_from_file():
+        contents = self.get_from_file()
+        if not contents:
+            contents = self.get_from_url()
+        if not contents:
             raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.data_dir))
 
         with open("/tmp/" + hash + '.torrent', 'rb') as file:
@@ -59,7 +62,7 @@ class Torrent(object):
         try:
             url = "http://academictorrents.com/download/" + self.hash
             torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
-            response = urlopen(url).read()
+            response = urlopen(url, timeout=5).read()
             open(torrent_path, 'wb').write(response)
             contents = bencode.decode(open(torrent_path, 'rb').read())
         except Exception as e:
