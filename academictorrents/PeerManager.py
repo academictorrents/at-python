@@ -1,7 +1,10 @@
 import select
 import struct
 from queue import Queue
-from itertools import zip_longest
+try:
+    from itertools import zip_longest as zip_longest
+except:
+    from itertools import izip_longest as zip_longest
 import time
 import logging
 from threading import Thread
@@ -32,9 +35,8 @@ class PeerManager(Thread):
 
         for url in self.torrent.torrent_file.get('url-list'):
             peer = HttpPeer(self.torrent, url)
-            if not peer:
-                continue
-            self.http_peers.append(peer)
+            if peer.accepts_ranges:
+                self.http_peers.append(peer)
 
         num_web_seed_managers = len(self.http_peers) * 5
         for i in range(num_web_seed_managers):
@@ -147,7 +149,7 @@ class PeerManager(Thread):
         i = 0
         if not self.peers:
             return
-        pieces_by_file = self.pieces_manager.pieces_by_file(reverse=True)
+        #pieces_by_file = self.pieces_manager.pieces_by_file(reverse=True)
         pieces = [pieces for _, pieces in pieces_by_file for pieces in pieces]
         while i < len(pieces) and requests < max_requests:
             piece = pieces[i]
@@ -164,18 +166,18 @@ class PeerManager(Thread):
 
     def enqueue_http_requests(self, pieces_by_file):
         i = 0
-        if not self.request_queue.empty():
+        if not self.request_queue.empty() or not self.http_peers:
             return
         while pieces_by_file:
             filename, pieces_containing_file = pieces_by_file.pop()
-            print(filename)
             for pieces in grouper(pieces_containing_file, 25):
                 pieces = [piece for piece in pieces if piece] # only truthy pieces
                 self.pieces_manager.set_pending(filename, pieces)
-                peer = self.http_peers[i % len(self.http_peers)]
-                print("enqueued")
-                self.request_queue.put((peer, filename, pieces), False)
-                i += 1
+                for peer in self.http_peers:
+                    if filename not in peer.fail_files:
+                        self.request_queue.put((peer, filename, pieces), False)
+                        i += 1
+                        break
 
 
 

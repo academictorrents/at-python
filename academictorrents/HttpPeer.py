@@ -10,18 +10,16 @@ class HttpPeer(object):
         self.torrent = torrent
         self.url = url
         self.sess = requests.Session()
-        try:
-            self.handshake(url)
-        except Exception:
-            return False
+        self.accepts_ranges = self.handshake(url)
+        self.fail_files = []
 
     def handshake(self, url):
         if not url:
-            raise Exception
+            return False
         resp = requests.head(url)
         if resp.headers.get('Accept-Ranges', False):  # if it was a full-url
             self.url = '/'.join(url.split('/')[0:-1]) + '/'
-            return
+            return True
         else:  # maybe we need to construct a full-url
             directory = self.torrent.torrent_file.get('info', {}).get('name')
             some_filename = self.torrent.torrent_file.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
@@ -32,8 +30,8 @@ class HttpPeer(object):
             resp = requests.head(compound_url + some_filename)
             if resp.headers.get('Accept-Ranges', False):  # if it wasn't a full-url
                 self.url = compound_url
-                return
-        raise Exception  # if we don't hit either of the above returns, we should raise an exception.
+                return True
+        return False
 
     def request_ranges(self, filename, pieces):
         start = pieces[0].get_file_offset(filename)
@@ -43,7 +41,6 @@ class HttpPeer(object):
         try:
             return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=3)
         except Exception as e:
-            print(e)
             return False
 
     def publish_responses(self, response, filename, pieces):

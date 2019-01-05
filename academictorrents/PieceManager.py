@@ -87,7 +87,7 @@ class PieceManager(Thread):
             for f in piece.files:
                 filename = f.get('path').split('/')[-1]
                 timestamp = piece.files_pending.get(filename, 0)
-                if int(time.time() - timestamp) > 8 and filename not in piece.files_finished.keys():
+                if int(time.time() - timestamp) > 1 and filename not in piece.files_finished.keys():
                     pieces_by_file[filename].append(piece)
                 # if int(time.time() - timestamp) > 8 :
                 #     print("timestamp")

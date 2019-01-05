@@ -17,9 +17,13 @@ class WebSeedManager(Thread):
             httpPeer, filename, pieces = self.request_queue.get()
             response = httpPeer.request_ranges(filename, pieces)
             if not response or response.status_code != 206:
-                print("failed on " + str(response) + " for " + filename)
+                httpPeer.fail_files.append(filename)
+                for http_peer in self.http_peers:
+                    response = http_peer.request_ranges(filename, pieces)
+                    if response and response.status_code == 206:
+                        httpPeer.publish_responses(response, filename, pieces)
+                self.request_queue.task_done()
                 continue
-            print("response!")
             httpPeer.publish_responses(response, filename, pieces)
             self.request_queue.task_done()
 

@@ -33,7 +33,7 @@ class Piece(object):
 
     def set_file(self, filename, data):
         index = int(self.get_offset(filename) / BLOCK_SIZE)
-        offset = self.get_offset(filename) % self.BLOCK_SIZE
+        offset = int(self.get_offset(filename) % self.BLOCK_SIZE)
         done = 0
         while done != len(data):
             if offset != 0:
@@ -55,26 +55,21 @@ class Piece(object):
 
     def try_complete(self):
         if all([block.status == "Full" or block.status == "Partial" for block in self.blocks]):
-            print("all or partial")
             buf = bytearray(b"")
             for index in range(len(self.blocks)):
                 buf.extend(self.blocks[index].assemble_data())
-            if len(buf) == self.size:
-                print("full")
+            if len(buf) > self.size:
+                print("resetting,...")
+                self.files_pending = {}
+                # self.reset_pending_blocks()
+                self.init_blocks()
 
-                if utils.sha1_hash(buf) == self.data_hash:
-                    for filename in self.files_pending:
-                        self.add_file_finished(filename)
-                    self.files_pending = {}
-
-                    print("correct")
-                    self.writeFilesOnDisk(buf)
-                    pub.sendMessage('PieceManager.update_bitfield', index=self.index)
-                else:
-                    print("resetting,...")
-                    self.files_pending = {}
-                    # self.reset_pending_blocks()
-                    # self.init_blocks()
+            if utils.sha1_hash(buf) == self.data_hash:
+                for filename in self.files_pending:
+                    self.add_file_finished(filename)
+                self.files_pending = {}
+                self.writeFilesOnDisk(buf)
+                pub.sendMessage('PieceManager.update_bitfield', index=self.index)
 
     def set_block(self, offset, data):
         index = int(offset / BLOCK_SIZE)
