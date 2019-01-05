@@ -57,5 +57,3 @@ class Client(object):
         self.peer_manager.request_stop()
         for web_seed_manager in self.web_seed_managers:
             web_seed_manager.request_stop()
-
-        return self.torrent.contents['info']['name']
