@@ -1,5 +1,3 @@
-__author__ = 'martin weiss, alexis gallepe'
-
 import hashlib
 import os
 import json
@@ -34,6 +32,7 @@ def clean_path(datastore=None):
         return os.path.expanduser(datastore) + "/"
     else:
         return os.path.abspath(datastore) + "/"
+
 
 def write_timestamp(at_hash):
     filename = get_timestamp_filename()
