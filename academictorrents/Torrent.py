@@ -51,12 +51,12 @@ class Torrent(object):
         assert(self.total_length > 0)
         assert(len(self.filenames) > 0)
 
-        name = torrent.contents['info']['name']
-        if "length" in torrent.contents['info']:
-            size_mb = torrent.contents['info']['length']/1000./1000.
+        name = self.contents['info']['name']
+        if "length" in self.contents['info']:
+            size_mb = self.contents['info']['length']/1000./1000.
         else:
             total_length = 0
-            for f in torrent.contents['info']['files']:
+            for f in self.contents['info']['files']:
                 total_length += f['length']
             size_mb = total_length/1000./1000.
 
