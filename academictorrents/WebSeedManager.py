@@ -22,6 +22,7 @@ class WebSeedManager(Thread):
                     response = http_peer.request_ranges(filename, pieces)
                     if response and response.status_code == 206:
                         httpPeer.publish_responses(response, filename, pieces)
+                        break
                 self.request_queue.task_done()
                 continue
             httpPeer.publish_responses(response, filename, pieces)

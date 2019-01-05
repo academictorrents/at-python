@@ -41,6 +41,7 @@ class HttpPeer(object):
         try:
             return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=3)
         except Exception as e:
+            print(e)
             return False
 
     def publish_responses(self, response, filename, pieces):

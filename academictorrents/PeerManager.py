@@ -158,7 +158,7 @@ class PeerManager(Thread):
             return
         while pieces_by_file:
             filename, pieces_containing_file = pieces_by_file.pop()
-            for pieces in grouper(pieces_containing_file, 25):
+            for pieces in grouper(pieces_containing_file):
                 pieces = [piece for piece in pieces if piece] # only truthy pieces
                 self.piece_manager.set_pending(filename, pieces)
                 for peer in self.http_peers:
@@ -167,11 +167,15 @@ class PeerManager(Thread):
                         i += 1
                         break
 
-
-
-def grouper(iterable, n, fillvalue=None):
-    "Collect data into fixed-length chunks or blocks"
-    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-    args = [iter(iterable)] * n
-    resp = zip_longest(*args, fillvalue=fillvalue)
+def grouper(pieces):
+    resp = []
+    length = 0
+    temp_pieces = []
+    for piece in pieces:
+        temp_pieces.append(piece)
+        if length > 5000000:
+            resp.append(temp_pieces)
+            temp_pieces = []
+        length += piece.size
+    resp.append(temp_pieces)
     return resp
