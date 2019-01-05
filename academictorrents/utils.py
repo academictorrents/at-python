@@ -27,38 +27,32 @@ def get_timestamp_filename():
     return "/tmp/torrent_timestamps.json"
 
 
-def get_torrent_dir(datastore=None, name=None):
+def datastore_path(datastore=None):
     if not datastore:
-        datastore = os.getcwd() + "/datastore/"
-    elif datastore == "." or datastore == "./":
-        datastore = "./"
-    elif datastore[-1] != "/":
+        return os.getcwd() + "/datastore/"
+    if datastore[0] != "/" and datastore[0] != "." and datastore[0] != "~":
+        datastore = "~/" + datastore
+    if datastore[-1] != "/":
         datastore = datastore + "/"
-    elif datastore[0] != "/":
-        datastore = os.getcwd() + "/" + datastore
-    if not name:
-        return datastore
-    if isinstance(name, str):
-        name = name.strip("/")
-    return datastore + name + '/'
+    return datastore
 
 
-def write_timestamp(hash):
+def write_timestamp(at_hash):
     filename = get_timestamp_filename()
     with open(filename, 'w+') as f:
         try:
             timestamps = json.loads(f.read())
         except ValueError:
             timestamps = {}
-        timestamps[hash] = int(datetime.datetime.now().strftime("%s"))
+        timestamps[at_hash] = int(datetime.datetime.now().strftime("%s"))
         json.dump(timestamps, f)
 
 
-def read_timestamp(hash):
+def read_timestamp(at_hash):
     filename = get_timestamp_filename()
     try:
         with open(filename) as f:
-            return json.load(f).get('hash', 0)
+            return json.load(f).get(at_hash, 0)
     except Exception:
         return 0
 
@@ -78,5 +72,4 @@ def timestamp_is_within_10_seconds(timestamp):
 
 
 def filenames_present(torrent, datastore):
-    name = torrent['info']['name']
-    return name in os.listdir(datastore)
+    return torrent['info']['name'] in os.listdir(datastore)

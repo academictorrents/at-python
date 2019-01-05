@@ -88,7 +88,7 @@ class Tracker(Thread):
             'port': 6881
         }
         try:
-            answerTracker = requests.get(tracker, params=params, timeout=5, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+            answerTracker = requests.get(tracker, params=params, timeout=30, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
             lstPeers = bencode.decode(answerTracker.content)
             for peer in lstPeers['peers']:
                 self.new_peers_queue.put([peer['ip'], peer['port']])
@@ -113,7 +113,7 @@ class Tracker(Thread):
                     'port': 6881
                 }
                 try:
-                    resp = requests.post(tracker[0], params=params, timeout=5, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.post(tracker[0], params=params, timeout=30, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
                     pass
             return params, resp
@@ -138,7 +138,7 @@ class Tracker(Thread):
                     'port': 6881
                 }
                 try:
-                    resp = requests.get(tracker[0], params=params, timeout=5, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.get(tracker[0], params=params, timeout=30, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
                 except Exception as e:
                     logging.info(e)
                     pass
@@ -196,7 +196,7 @@ class Tracker(Thread):
             if ip == '127.0.0.1':
                 return False
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.settimeout(3)
+            sock.settimeout(30)
             conn = (ip, parsed.port)
             msg, trans_id, action = self.make_connection_id_request()
             response = self.send_msg(conn, sock, msg, trans_id, action, 16)
