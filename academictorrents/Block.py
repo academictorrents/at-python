@@ -12,7 +12,6 @@ class Block(object):
     def assemble_data(self):
         buf = bytearray(self.size)
         length = 0
-
         for index, data in self.data.items():
             index = int(index % self.size)
             buf[index: index + len(data)] = data

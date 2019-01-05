@@ -30,9 +30,5 @@ class PeerDownloadTestSuite(unittest.TestCase):
         filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb')
         self.assertTrue(os.path.isfile(filename))
 
-    def test_find_downloaded_torrent(self):
-        filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb')
-        self.assertTrue(os.path.isfile(filename))
-
 if __name__ == '__main__':
     unittest.main()

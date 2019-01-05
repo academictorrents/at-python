@@ -78,7 +78,7 @@ class Piece(object):
 
     def set_block(self, offset, data):
         index = int(offset / BLOCK_SIZE)
-        self.blocks[index].data[offset] = bytearray(data)
+        self.blocks[index].data[offset % BLOCK_SIZE] = bytearray(data)
         self.blocks[index].status = "Full"
         self.try_complete()
 

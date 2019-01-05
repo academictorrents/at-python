@@ -138,7 +138,6 @@ class PeerManager(Thread):
         i = 0
         if not self.peers:
             return
-        #pieces_by_file = self.piece_manager.pieces_by_file(reverse=True)
         pieces = [pieces for _, pieces in pieces_by_file for pieces in pieces]
         while i < len(pieces) and requests < max_requests:
             piece = pieces[i]
