@@ -30,7 +30,7 @@ class PeerManager(Thread):
         for i in range(self.piece_manager.number_of_pieces):
             self.pieces_by_peer.append([0, []])
 
-        for url in self.torrent.torrent_file.get('url-list'):
+        for url in self.torrent.contents.get('url-list'):
             peer = HttpPeer(self.torrent, url)
             if peer.accepts_ranges:
                 self.http_peers.append(peer)

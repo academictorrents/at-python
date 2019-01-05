@@ -5,46 +5,40 @@ import sys, os, time
 import datetime
 from academictorrents import utils
 from academictorrents import Torrent
+from os.path import expanduser
+home = expanduser("~")
 
 
 
 class UtilsTestSuite(unittest.TestCase):
     """Test cases on the utils.py file."""
-    def test_get_torrent_dir(self):
-        path = utils.get_torrent_dir(datastore='/data/lisa/data/', name="LUNA16")
+    def test_clean_path(self):
+        path = utils.clean_path(datastore="/data/lisa/data/LUNA16")
         self.assertTrue(path == '/data/lisa/data/LUNA16/')
 
-    def test_get_torrent_dir_no_trailing_slash(self):
-        path = utils.get_torrent_dir(datastore='/data/lisa/data', name="LUNA16")
-        self.assertTrue(path == '/data/lisa/data/LUNA16/')
-
-    def test_get_torrent_dir_slashes_on_name(self):
-        path = utils.get_torrent_dir(datastore='/data/lisa/data/', name="/LUNA16/")
-        self.assertTrue(path == '/data/lisa/data/LUNA16/')
-
-    def test_get_torrent_dir_no_name(self):
-        path = utils.get_torrent_dir(datastore='/data/lisa/data/')
-        self.assertTrue(path == '/data/lisa/data/')
-
-    def test_get_torrent_dir_default(self):
-        path = utils.get_torrent_dir()
+    def test_clean_path_default(self):
+        path = utils.clean_path()
         self.assertTrue(path == os.getcwd() + "/datastore/")
 
-    def test_get_torrent_dir_relative(self):
-        path = utils.get_torrent_dir(datastore="datastore/")
+    def test_clean_path_relative(self):
+        path = utils.clean_path(datastore="datastore/")
         self.assertTrue(path == os.getcwd() + "/datastore/")
 
-    def test_get_torrent_dir_relative_dot(self):
-        path = utils.get_torrent_dir(".")
-        self.assertTrue(path == "./")
+    def test_clean_path_relative_dot(self):
+        path = utils.clean_path(".")
+        self.assertTrue(path == os.getcwd() + "/")
 
-    def test_get_torrent_dir_relative_dot_slash(self):
-        path = utils.get_torrent_dir("./")
-        self.assertTrue(path == "./")
+    def test_clean_path_relative_dot_slash(self):
+        path = utils.clean_path("./")
+        self.assertTrue(path == os.getcwd() + "/")
 
-    def test_get_torrent_dir_relative_tilde(self):
-        path = utils.get_torrent_dir("~/mycooldatastore")
-        self.assertTrue(path == "~/mycooldatastore/")
+    def test_clean_path_relative_dot_slash_dir(self):
+        path = utils.clean_path("./apples")
+        self.assertTrue(path == os.getcwd() + "/apples/")
+
+    def test_clean_path_relative_tilde(self):
+        path = utils.clean_path("~/mycooldatastore")
+        self.assertTrue(path == home + "/mycooldatastore/")
 
     def test_write_timestamp(self):
         utils.write_timestamp("55a8925a8d546b9ca47d309ab438b91f7959e77f")
@@ -64,16 +58,12 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertFalse(ret)
 
     def test_filename_checker(self):
-        torrent_dir = "./tests/"
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", data_dir=torrent_dir).get_from_file()
-        ret = utils.filenames_present(torrent, torrent_dir)
-        self.assertFalse(ret)
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore= "./tests/")
+        self.assertFalse(utils.filenames_present(torrent))
 
     def test_filename_checker_true(self):
-        torrent_dir = "./datastore/"
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", data_dir=torrent_dir).get_from_file()
-        ret = utils.filenames_present(torrent, torrent_dir)
-        self.assertTrue(ret)
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="./datastore/")
+        self.assertTrue(utils.filenames_present(torrent))
 
     # Test with different datastore
     def test_different_datastore(self):

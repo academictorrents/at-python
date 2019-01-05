@@ -54,7 +54,7 @@ class Tracker(Thread):
             return
         self.last_update_time = int(datetime.datetime.now().strftime("%s"))
 
-        for tracker in self.torrent.announceList:
+        for tracker in self.torrent.trackers:
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
@@ -98,7 +98,7 @@ class Tracker(Thread):
 
     def stop_message(self):
         resp = requests.models.Response()
-        for tracker in self.torrent.announceList:
+        for tracker in self.torrent.trackers:
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":
@@ -125,7 +125,7 @@ class Tracker(Thread):
         resp = requests.models.Response()
         if self.downloaded == 0:
             return True
-        for tracker in self.torrent.announceList:
+        for tracker in self.torrent.trackers:
             if tracker[0] == '':
                 continue
             elif tracker[0][:4] == "http":

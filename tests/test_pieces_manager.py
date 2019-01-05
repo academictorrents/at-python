@@ -12,8 +12,7 @@ class PieceManagerTestSuite(unittest.TestCase):
     """Test cases on the HttpPeer.py file."""
 
     def test_init(self):
-        torrent_dir = "tests/"
-        torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", torrent_dir)
+        torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", "tests/")
         torrent.number_of_pieces = 3
         torrent.total_length = 12
         torrent.piece_length = 4

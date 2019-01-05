@@ -58,4 +58,4 @@ class Client(object):
         for web_seed_manager in self.web_seed_managers:
             web_seed_manager.request_stop()
 
-        return self.torrent.torrent_file['info']['name']
+        return self.torrent.contents['info']['name']

@@ -27,14 +27,25 @@ def get_timestamp_filename():
     return "/tmp/torrent_timestamps.json"
 
 
-def datastore_path(datastore=None):
+def clean_path(datastore=None):
     if not datastore:
         return os.getcwd() + "/datastore/"
-    if datastore[0] != "/" and datastore[0] != "." and datastore[0] != "~":
-        datastore = "~/" + datastore
+    if datastore == "~" or datastore == "~/":
+        return os.path.expanduser("~/")
     if datastore[-1] != "/":
         datastore = datastore + "/"
-    return datastore
+    if datastore.startswith("~/"):
+        return os.path.expanduser(datastore)
+    if datastore.startswith("~"):
+        return os.path.expanduser("~/" + datastore[2:])
+    if datastore == "./":
+        return os.getcwd() + "/"
+    if datastore.startswith("./"):
+        return os.getcwd() + "/" + datastore[2:]
+    if datastore.startswith("/"):
+        return datastore
+    else:
+        return os.getcwd() + "/" + datastore
 
 
 def write_timestamp(at_hash):
@@ -71,5 +82,5 @@ def timestamp_is_within_10_seconds(timestamp):
     return False
 
 
-def filenames_present(torrent, datastore):
-    return torrent['info']['name'] in os.listdir(datastore)
+def filenames_present(torrent):
+    return torrent.contents['info']['name'] in os.listdir(torrent.datastore)

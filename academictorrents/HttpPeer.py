@@ -22,8 +22,8 @@ class HttpPeer(object):
             self.url = '/'.join(url.split('/')[0:-1]) + '/'
             return True
         else:  # maybe we need to construct a full-url
-            directory = self.torrent.torrent_file.get('info', {}).get('name')
-            some_filename = self.torrent.torrent_file.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
+            directory = self.torrent.contents.get('info', {}).get('name')
+            some_filename = self.torrent.contents.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
             if url[-1] == '/':
                 compound_url = url + directory + '/'
             else:

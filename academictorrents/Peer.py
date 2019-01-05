@@ -6,7 +6,6 @@ import struct
 import bitstring
 from bitstring import BitArray
 from pubsub import pub
-from six import string_types
 from . import utils
 
 
