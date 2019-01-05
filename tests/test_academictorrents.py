@@ -14,7 +14,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
 
     def test_urls(self):
         path = at.get("4e9022e7abc519733bf81a4fa353165633c371f1", urls=["https://s3.amazonaws.com/mila-genomics/testfile0.rtf"])
-        assert(path)
+        self.assertTrue(os.path.isfile(path))
 
 if __name__ == '__main__':
     unittest.main()
