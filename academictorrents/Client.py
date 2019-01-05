@@ -17,7 +17,7 @@ class Client(object):
         self.request_queue = Queue()
 
         self.piece_manager = piece_manager
-        self.peer_manager = PeerManager(self.torrent, self.piece_manager, self.request_queue)
+        self.peer_manager = PeerManager(torrent.urls, self.piece_manager, self.request_queue)
         self.peer_seeker = PeerSeeker(self.new_peers_queue, self.torrent, self.peer_manager)
         self.tracker = Tracker(torrent, self.new_peers_queue, downloaded_amount)
 
@@ -28,7 +28,7 @@ class Client(object):
         self.web_seed_managers = []
         num_web_seed_managers = len(self.peer_manager.http_peers) * 5
         for i in range(num_web_seed_managers):
-            t = WebSeedManager(torrent, self.request_queue, self.peer_manager.http_peers)
+            t = WebSeedManager(self.request_queue, self.peer_manager.http_peers)
             t.setDaemon(True)
             t.start()
             self.web_seed_managers.append(t)

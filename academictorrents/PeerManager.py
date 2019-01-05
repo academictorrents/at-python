@@ -15,12 +15,11 @@ from .HttpPeer import HttpPeer
 
 
 class PeerManager(Thread):
-    def __init__(self, torrent, piece_manager, request_queue):
+    def __init__(self, urls, piece_manager, request_queue):
         Thread.__init__(self)
         self.peers = []
         self.http_peers = []
         self.request_queue = request_queue
-        self.torrent = torrent
         self.piece_manager = piece_manager
         self.rarestPieces = RarestPieces.RarestPieces(piece_manager)
         self.stop_requested = False
@@ -29,11 +28,8 @@ class PeerManager(Thread):
         self.pieces_by_peer = []
         for i in range(self.piece_manager.number_of_pieces):
             self.pieces_by_peer.append([0, []])
-
-        for url in self.torrent.contents.get('url-list'):
-            peer = HttpPeer(self.torrent, url)
-            if peer.accepts_ranges:
-                self.http_peers.append(peer)
+        for url in urls:
+            self.http_peers.append(HttpPeer(url))
 
         # Events
         pub.subscribe(self.add_peer, 'PeerManager.new_peer')

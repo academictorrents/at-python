@@ -6,11 +6,10 @@ import gzip
 import sys
 import os
 import time
-import numpy as np
 
 print("Libraries imported, about to start a download")
 
-filename = at.get("55a8925a8d546b9ca47d309ab438b91f7959e77f")
+filename = at.get("b79869ca12787166de88311ca1f28e3ebec12dec")
 
 print("About to open the file")
 

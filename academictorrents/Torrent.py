@@ -2,6 +2,7 @@ import time
 import bencode
 import logging
 import os
+import requests
 from . import utils
 try:
     from urllib.parse import urlparse, urlencode
@@ -37,6 +38,7 @@ class Torrent(object):
         self.info_hash = utils.sha1_hash(bencode.encode(self.contents['info']))
         self.peer_id = self.generate_peer_id()
         self.trackers = self.get_trackers()
+        self.urls = self.get_urls()
         self.filenames = []
 
         self.get_files()
@@ -61,6 +63,26 @@ class Torrent(object):
             size_mb = total_length/1000./1000.
 
         print("Torrent name: " + name + ", Size: {0:.2f}MB".format(size_mb))
+
+    def get_urls(self):
+        urls = []
+        for url in self.contents.get('url-list'):
+            resp = requests.head(url)
+            if resp.headers.get('Accept-Ranges', False):
+                urls.append('/'.join(url.split('/')[0:-1]) + '/')
+                continue
+
+            directory = self.contents.get('info', {}).get('name')
+            filename = self.contents.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
+            if url[-1] == '/':
+                url = url + directory + '/'
+            else:
+                url = url + '/' + directory + '/'
+
+            resp = requests.head(url + filename)
+            if resp.headers.get('Accept-Ranges', False):
+                urls.append(url)
+        return urls
 
     def get_from_file(self):
         torrent_path = os.path.join("/tmp/", self.hash + '.torrent')

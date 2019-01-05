@@ -35,7 +35,6 @@ def clean_path(datastore=None):
     else:
         return os.path.abspath(datastore) + "/"
 
-
 def write_timestamp(at_hash):
     filename = get_timestamp_filename()
     with open(filename, 'w+') as f:

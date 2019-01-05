@@ -4,11 +4,10 @@ from . import HttpPeer
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class WebSeedManager(Thread):
-    def __init__(self, torrent, request_queue, http_peers):
+    def __init__(self, request_queue, http_peers):
         Thread.__init__(self)
         self.request_queue = request_queue
         self.stop_requested = False
-        self.torrent = torrent
         self.http_peers = http_peers
         self.setDaemon(True)
 
