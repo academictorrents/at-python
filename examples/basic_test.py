@@ -6,7 +6,6 @@ import gzip
 import sys
 import os
 import time
-import numpy as np
 
 print("Libraries imported, about to start a download")
 

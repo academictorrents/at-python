@@ -1,9 +1,8 @@
-__author__ = 'alexisgallepe'
-
 import time
 import bencode
 import logging
 import os
+import requests
 from . import utils
 try:
     from urllib.parse import urlparse, urlencode
@@ -16,82 +15,117 @@ except ImportError:
 
 
 class Torrent(object):
-    def __init__(self, hash, data_dir):
+    def __init__(self, hash, datastore):
         self.hash = hash
-        self.data_dir = data_dir
-        if not os.path.isdir(self.data_dir):
-            os.makedirs(self.data_dir)
+        self.datastore = utils.clean_path(datastore=datastore)
+        contents = ""
+        if not os.path.isdir(self.datastore):
+            os.makedirs(self.datastore)
+        try:
+            contents = open("/tmp/" + hash + '.torrent', 'rb').read()
+        except Exception:
+            contents = self.get_from_file()
+            if not contents:
+                contents = self.get_from_url()
+            if not contents:
+                raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.datastore))
 
-        if not self.get_from_url() and not self.get_from_file():
-            raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.data_dir))
+        self.contents = bencode.decode(contents)
+        self.total_length = 0
+        self.piece_length = self.contents['info']['piece length']
+        self.pieces = self.contents['info']['pieces']
 
-        with open("/tmp/" + hash + '.torrent', 'rb') as file:
-            contents = file.read()
-        self.torrentFile = bencode.decode(contents)
-        self.totalLength = 0
-        self.pieceLength = self.torrentFile['info']['piece length']
-        self.pieces = self.torrentFile['info']['pieces']
-
-        self.info_hash = utils.sha1_hash(bencode.encode(self.torrentFile['info']))
+        self.info_hash = utils.sha1_hash(bencode.encode(self.contents['info']))
         self.peer_id = self.generate_peer_id()
-        self.announceList = self.getTrakers()
-        self.fileNames = []
+        self.trackers = self.get_trackers()
+        self.urls = self.get_urls()
+        self.filenames = []
 
         self.get_files()
-        if self.totalLength % self.pieceLength == 0:
-            self.numberOfPieces = self.totalLength / self.pieceLength
+        if self.total_length % self.piece_length == 0:
+            self.number_of_pieces = self.total_length / self.piece_length
         else:
-            self.numberOfPieces = int(self.totalLength / self.pieceLength) + 1
+            self.number_of_pieces = int(self.total_length / self.piece_length) + 1
 
-        logging.debug(self.announceList)
-        logging.debug(self.fileNames)
+        logging.debug(self.trackers)
+        logging.debug(self.filenames)
 
-        assert(self.totalLength > 0)
-        assert(len(self.fileNames) > 0)
+        assert(self.total_length > 0)
+        assert(len(self.filenames) > 0)
+
+        name = self.contents['info']['name']
+        if "length" in self.contents['info']:
+            size_mb = self.contents['info']['length']/1000./1000.
+        else:
+            total_length = 0
+            for f in self.contents['info']['files']:
+                total_length += f['length']
+            size_mb = total_length/1000./1000.
+
+        print("Torrent name: " + name + ", Size: {0:.2f}MB".format(size_mb))
+
+    def get_urls(self):
+        urls = []
+        for url in self.contents.get('url-list'):
+            resp = requests.head(url)
+            if resp.headers.get('Accept-Ranges', False):
+                urls.append('/'.join(url.split('/')[0:-1]) + '/')
+                continue
+
+            directory = self.contents.get('info', {}).get('name')
+            filename = self.contents.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
+            if url[-1] == '/':
+                url = url + directory + '/'
+            else:
+                url = url + '/' + directory + '/'
+
+            resp = requests.head(url + filename)
+            if resp.headers.get('Accept-Ranges', False):
+                urls.append(url)
+        return urls
 
     def get_from_file(self):
+        torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
         try:
-            torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
-            return bencode.decode(open(torrent_path, 'rb').read())
+            return open(torrent_path, 'rb').read()
         except Exception:
-            return False
+            return None
+        return
 
     def get_from_url(self):
         contents = None
+        url = "http://academictorrents.com/download/" + self.hash
+        torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
+        response = urlopen(url, timeout=5).read()
+        open(torrent_path, 'wb').write(response)
         try:
-            url = "http://academictorrents.com/download/" + self.hash
-            torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
-            response = urlopen(url).read()
-            open(torrent_path, 'wb').write(response)
-            contents = bencode.decode(open(torrent_path, 'rb').read())
-        except Exception as e:
-            print("could not download the torrent")
-        return contents
+            return open(torrent_path, 'rb').read()
+        except Exception:
+            return None
 
     def get_files(self):
-        root = self.data_dir + self.torrentFile['info']['name']  # + "/"
-        if 'files' in self.torrentFile['info']:
+        root = self.datastore + self.contents['info']['name']
+        if 'files' in self.contents['info']:
             if not os.path.exists(root):
                 os.mkdir(root, 0o766)
 
-            for f in self.torrentFile['info']['files']:
-                pathFile = os.path.join(root, *f["path"])
+            for f in self.contents['info']['files']:
+                path = os.path.join(root, *f["path"])
 
-                if not os.path.exists(os.path.dirname(pathFile)):
-                    os.makedirs(os.path.dirname(pathFile))
+                if not os.path.exists(os.path.dirname(path)):
+                    os.makedirs(os.path.dirname(path))
 
-                self.fileNames.append({"path": pathFile, "length": f["length"]})
-                self.totalLength += f["length"]
-
+                self.filenames.append({"path": path, "length": f["length"]})
+                self.total_length += f["length"]
         else:
-            self.fileNames.append({"path": root, "length": self.torrentFile['info']['length']})
-            self.totalLength = self.torrentFile['info']['length']
+            self.filenames.append({"path": root, "length": self.contents['info']['length']})
+            self.total_length = self.contents['info']['length']
 
-    def getTrakers(self):
-        if 'announce-list' in self.torrentFile:
-            return self.torrentFile['announce-list']
+    def get_trackers(self):
+        if 'announce-list' in self.contents:
+            return self.contents['announce-list']
         else:
-            return [[self.torrentFile['announce']]]
+            return [[self.contents['announce']]]
 
     def generate_peer_id(self):
         seed = str(time.time())

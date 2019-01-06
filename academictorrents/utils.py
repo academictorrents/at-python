@@ -1,12 +1,10 @@
-__author__ = 'martin weiss, alexis gallepe'
-
 import hashlib
 import os
 import json
 import datetime
 
 
-def convertBytesToDecimal(headerBytes):
+def convert_bytes_to_decimal(headerBytes):
     size = 0
     power = len(headerBytes) - 1
     for ch in headerBytes:
@@ -27,38 +25,31 @@ def get_timestamp_filename():
     return "/tmp/torrent_timestamps.json"
 
 
-def get_torrent_dir(datastore=None, name=None):
+def clean_path(datastore=None):
     if not datastore:
-        datastore = os.getcwd() + "/datastore/"
-    elif datastore == "." or datastore == "./":
-        datastore = "./"
-    elif datastore[-1] != "/":
-        datastore = datastore + "/"
-    elif datastore[0] != "/":
-        datastore = os.getcwd() + "/" + datastore
-    if not name:
-        return datastore
-    if isinstance(name, str):
-        name = name.strip("/")
-    return datastore + name + '/'
+        return os.getcwd() + "/datastore/"
+    if datastore.startswith("~"):
+        return os.path.expanduser(datastore) + "/"
+    else:
+        return os.path.abspath(datastore) + "/"
 
 
-def write_timestamp(hash):
+def write_timestamp(at_hash):
     filename = get_timestamp_filename()
     with open(filename, 'w+') as f:
         try:
             timestamps = json.loads(f.read())
         except ValueError:
             timestamps = {}
-        timestamps[hash] = int(datetime.datetime.now().strftime("%s"))
+        timestamps[at_hash] = int(datetime.datetime.now().strftime("%s"))
         json.dump(timestamps, f)
 
 
-def read_timestamp(hash):
+def read_timestamp(at_hash):
     filename = get_timestamp_filename()
     try:
         with open(filename) as f:
-            return json.load(f).get('hash', 0)
+            return json.load(f).get(at_hash, 0)
     except Exception:
         return 0
 
@@ -77,6 +68,5 @@ def timestamp_is_within_10_seconds(timestamp):
     return False
 
 
-def filenames_present(torrent, datastore):
-    name = torrent['info']['name']
-    return name in os.listdir(datastore)
+def filenames_present(torrent):
+    return torrent.contents['info']['name'] in os.listdir(torrent.datastore)

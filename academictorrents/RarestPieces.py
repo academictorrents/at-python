@@ -1,29 +1,27 @@
-__author__ = 'alexisgallepe'
-
 from pubsub import pub
 
 class RarestPieces(object):
-    def __init__(self, piecesManager):
+    def __init__(self, piece_manager):
 
-        self.piecesManager = piecesManager
+        self.piece_manager = piece_manager
         self.rarestPieces = []
 
-        for pieceNumber in range(self.piecesManager.numberOfPieces):
-            peersByPieceIndex = {"idPiece":pieceNumber, "numberOfPeers":0, "peers":[]}
-            self.rarestPieces.append(peersByPieceIndex)
+        for pieceNumber in range(self.piece_manager.number_of_pieces):
+            PeersByPiece = {"id_piece":pieceNumber, "numberOfPeers":0, "peers":[]}
+            self.rarestPieces.append(PeersByPiece)
 
-        #pub.subscribe(self.peersBitfield, 'RarestPiece.updatePeersBitfield')
+        #pub.subscribe(self.peers_bitfield, 'RarestPiece.update_peers_bitfield')
 
 
-    def peersBitfield(self,bitfield=None,peer=None,pieceIndex=None):
+    def peers_bitfield(self,bitfield=None,peer=None,index=None):
 
         if len(self.rarestPieces) == 0:
             raise("no more piece")
 
         # Piece complete
         try:
-            if not pieceIndex == None:
-                self.rarestPieces.__delitem__(pieceIndex)
+            if not index == None:
+                self.rarestPieces.__delitem__(index)
         except:
             pass
 
