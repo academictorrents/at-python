@@ -27,9 +27,11 @@ def get_timestamp_filename():
 
 def get_datastore(datastore="", path_to_config_file="~/.academictorrents.config"):
     if datastore:
-        datastore = clean_path(datastore) + "/"
+        datastore = clean_path(datastore)
     else:
-        datastore = json.loads(open(clean_path(path_to_config_file))).get("datastore", os.getcwd() + "/datastore/")
+        datastore = json.loads(open(clean_path(path_to_config_file)).read()).get("datastore", os.getcwd() + "/datastore/")
+    if datastore[-1] != "/":
+        datastore = datastore + "/"
     return datastore
 
 

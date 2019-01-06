@@ -61,7 +61,7 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertFalse(ret)
 
     def test_filename_checker(self):
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore= "./tests/")
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="./tests/")
         self.assertFalse(utils.filenames_present(torrent))
 
     def test_filename_checker_true(self):
@@ -70,6 +70,7 @@ class UtilsTestSuite(unittest.TestCase):
 
     # Test with different datastore
     def test_different_datastore(self):
-        filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore=os.getcwd() + '/datastore/alt/')
-        assert filename == os.getcwd() + '/datastore/alt/mnist.pkl.gz'
+        filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore='~/.academictorrent-datastore/alt/')
+        import pdb; pdb.set_trace()
+        assert filename == os.path.expanduser('~/.academictorrent-datastore/alt/mnist.pkl.gz')
         self.assertTrue(os.path.isfile(filename))
