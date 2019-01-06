@@ -9,7 +9,7 @@ import academictorrents as at
 path_of_giant_dataset = at.get("323a0048d87ca79b68f12a6350a57776b6a3b7fb") # Download massive dataset
 ```
 
-# For people who want to download academic datasets
+# For people who want to download datasets
 we're compatible with Python versions: 2.7, 3.4, 3.5, 3.6
 
 To install:
