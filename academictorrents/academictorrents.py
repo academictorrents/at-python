@@ -34,4 +34,4 @@ def get(at_hash, datastore="~/.academictorrents-datastore", urls=[], showlogs=Fa
     return path
 
 def set_datastore(datastore, path_to_config_file="~/.academictorrents.config"):
-    json.dumps({"datastore": datastore}, open(clean_path(path_to_config_file), "w+"))
+    json.dump({"datastore": datastore}, open(clean_path(path_to_config_file), "w+"))
