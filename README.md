@@ -1,7 +1,7 @@
 # Academic Torrents Python API
 
 [![Build Status](https://travis-ci.org/AcademicTorrents/at-python.svg?branch=master)](https://travis-ci.org/AcademicTorrents/at-python)
-[![codecov](https://codecov.io/gh/AcademicTorrents/at-python/branch/master/graph/badge.svg)](https://codecov.io/gh/AcademicTorrents/python-r-api)
+[![codecov](https://codecov.io/gh/AcademicTorrents/at-python/branch/master/graph/badge.svg)](https://codecov.io/gh/AcademicTorrents/at-python)
 
 This repository is an implementation of the BitTorrent protocol written in Python and downloadable as a `pip` module. You can download datasets from AcademicTorrents.com in two lines of code:
 ```
