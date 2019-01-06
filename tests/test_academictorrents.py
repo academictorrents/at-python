@@ -17,11 +17,11 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         self.assertTrue(os.path.isfile(path))
 
     def test_set_datastore(self):
-        test_config_filename = clean_path("~/.test_academictorrents.config")
-        self.assertFalse(os.path.isfile(test_config_filename))
-        at.set_datastore("/data/lisa/data/academictorrents-datastore/", test_config_filename)
-        self.assertTrue(os.path.isfile(test_config_filename))
-        os.remove(test_config_filename)
+        test_path_to_config_file = clean_path("~/.test_academictorrents.config")
+        self.assertFalse(os.path.isfile(test_path_to_config_file))
+        at.set_datastore("/data/lisa/data/academictorrents-datastore/", test_path_to_config_file)
+        self.assertTrue(os.path.isfile(test_path_to_config_file))
+        os.remove(test_path_to_config_file)
 
     def test_empty_url(self):
         path = at.get("4d563087fb327739d7ec9ee9a0d32c4cb8b0355e")

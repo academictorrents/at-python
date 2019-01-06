@@ -33,5 +33,5 @@ def get(at_hash, datastore="~/.academictorrents-datastore", urls=[], showlogs=Fa
     write_timestamp(at_hash)
     return path
 
-def set_datastore(datastore, config_filename="~/.academictorrents.config"):
-    json.dumps({"datastore": datastore}, open(clean_path(config_filename), "w+"))
+def set_datastore(datastore, path_to_config_file="~/.academictorrents.config"):
+    json.dumps({"datastore": datastore}, open(clean_path(path_to_config_file), "w+"))

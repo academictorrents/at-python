@@ -25,11 +25,11 @@ def get_timestamp_filename():
     return "/tmp/torrent_timestamps.json"
 
 
-def get_datastore(datastore="", config_filename="~/.academictorrents.config"):
+def get_datastore(datastore="", path_to_config_file="~/.academictorrents.config"):
     if datastore:
         datastore = clean_path(datastore) + "/"
     else:
-        datastore = json.loads(open(clean_path(config_filename))).get("datastore", os.getcwd() + "/datastore/")
+        datastore = json.loads(open(clean_path(path_to_config_file))).get("datastore", os.getcwd() + "/datastore/")
     return datastore
 
 
