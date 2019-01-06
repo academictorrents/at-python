@@ -11,36 +11,36 @@ home = expanduser("~")
 
 class UtilsTestSuite(unittest.TestCase):
     """Test cases on the utils.py file."""
-    def test_clean_path(self):
-        path = utils.clean_path(datastore="/data/lisa/data/LUNA16")
+    def test_get_datastore(self):
+        path = utils.get_datastore(datastore="/data/lisa/data/LUNA16")
         self.assertTrue(path == '/data/lisa/data/LUNA16/')
 
-    def test_clean_path_default(self):
-        path = utils.clean_path()
+    def test_get_datastore_default(self):
+        path = utils.get_datastore("~/.academictorrents-datastore")
+        self.assertTrue(path == utils.clean_path("~/.academictorrents-datastore") + "/")
+
+    def test_get_datastore_relative(self):
+        path = utils.get_datastore(datastore="datastore/")
         self.assertTrue(path == os.getcwd() + "/datastore/")
 
-    def test_clean_path_relative(self):
-        path = utils.clean_path(datastore="datastore/")
-        self.assertTrue(path == os.getcwd() + "/datastore/")
-
-    def test_clean_path_relative_dot(self):
-        path = utils.clean_path(".")
+    def test_get_datastore_relative_dot(self):
+        path = utils.get_datastore(".")
         self.assertTrue(path == os.getcwd() + "/")
 
-    def test_clean_path_relative_dot_slash(self):
-        path = utils.clean_path("./")
+    def test_get_datastore_relative_dot_slash(self):
+        path = utils.get_datastore("./")
         self.assertTrue(path == os.getcwd() + "/")
 
-    def test_clean_path_relative_dot_slash_dir(self):
-        path = utils.clean_path("./apples")
+    def test_get_datastore_relative_dot_slash_dir(self):
+        path = utils.get_datastore("./apples")
         self.assertTrue(path == os.getcwd() + "/apples/")
 
-    def test_clean_path_relative_tilde(self):
-        path = utils.clean_path("~/mycooldatastore")
+    def test_get_datastore_relative_tilde(self):
+        path = utils.get_datastore("~/mycooldatastore")
         self.assertTrue(path == home + "/mycooldatastore/")
 
     def test_relative_back(self):
-        path = utils.clean_path("..")
+        path = utils.get_datastore("..")
         self.assertTrue(path == os.path.abspath("..") + "/")
 
     def test_write_timestamp(self):
@@ -65,7 +65,7 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertFalse(utils.filenames_present(torrent))
 
     def test_filename_checker_true(self):
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="./datastore/")
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="~/.academictorrents-datastore/")
         self.assertTrue(utils.filenames_present(torrent))
 
     # Test with different datastore

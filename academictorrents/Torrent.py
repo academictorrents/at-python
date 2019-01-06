@@ -17,7 +17,7 @@ except ImportError:
 class Torrent(object):
     def __init__(self, hash, datastore):
         self.hash = hash
-        self.datastore = utils.clean_path(datastore=datastore)
+        self.datastore = utils.get_datastore(datastore=datastore)
         contents = ""
         if not os.path.isdir(self.datastore):
             os.makedirs(self.datastore)
@@ -67,6 +67,8 @@ class Torrent(object):
     def get_urls(self):
         urls = []
         for url in self.contents.get('url-list'):
+            if not url:
+                continue
             resp = requests.head(url)
             if resp.headers.get('Accept-Ranges', False):
                 urls.append('/'.join(url.split('/')[0:-1]) + '/')
