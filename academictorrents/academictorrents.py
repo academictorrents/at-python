@@ -1,12 +1,13 @@
 import logging
+import json
 from queue import Queue
 from .PieceManager import PieceManager
 from .Torrent import Torrent
 from .Client import Client
-from .utils import get_datastore, read_timestamp, timestamp_is_within_30_days, filenames_present, write_timestamp
+from .utils import read_timestamp, timestamp_is_within_30_days, filenames_present, write_timestamp, clean_path
 
 
-def get(at_hash, datastore="", urls=[], showlogs=False):
+def get(at_hash, datastore="~/.academictorrents-datastore", urls=[], showlogs=False):
     logging.getLogger().setLevel(logging.CRITICAL)
     if showlogs:
         logging.getLogger().setLevel(level=logging.INFO)
@@ -33,5 +34,4 @@ def get(at_hash, datastore="", urls=[], showlogs=False):
     return path
 
 def set_datastore(datastore, config_filename="~/.academictorrents.config"):
-    with open(clean_path(config_filename), "w+") as f:
-        return json.dumps({"datastore": datastore}, f)
+    json.dumps({"datastore": datastore}, open(clean_path(config_filename), "w+"))

@@ -16,8 +16,8 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertTrue(path == '/data/lisa/data/LUNA16/')
 
     def test_get_datastore_default(self):
-        path = utils.get_datastore()
-        self.assertTrue(path == os.getcwd() + "/datastore/")
+        path = utils.get_datastore("~/.academictorrents-datastore")
+        self.assertTrue(path == utils.clean_path("~/.academictorrents-datastore") + "/")
 
     def test_get_datastore_relative(self):
         path = utils.get_datastore(datastore="datastore/")
@@ -65,7 +65,7 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertFalse(utils.filenames_present(torrent))
 
     def test_filename_checker_true(self):
-        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="./datastore/")
+        torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="~/.academictorrents-datastore/")
         self.assertTrue(utils.filenames_present(torrent))
 
     # Test with different datastore

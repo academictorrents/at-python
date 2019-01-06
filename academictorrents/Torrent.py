@@ -67,6 +67,8 @@ class Torrent(object):
     def get_urls(self):
         urls = []
         for url in self.contents.get('url-list'):
+            if not url:
+                continue
             resp = requests.head(url)
             if resp.headers.get('Accept-Ranges', False):
                 urls.append('/'.join(url.split('/')[0:-1]) + '/')
