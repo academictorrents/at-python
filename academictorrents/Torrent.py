@@ -17,7 +17,7 @@ except ImportError:
 class Torrent(object):
     def __init__(self, hash, datastore):
         self.hash = hash
-        self.datastore = utils.clean_path(datastore=datastore)
+        self.datastore = utils.get_datastore(datastore=datastore)
         contents = ""
         if not os.path.isdir(self.datastore):
             os.makedirs(self.datastore)

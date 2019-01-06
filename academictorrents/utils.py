@@ -25,13 +25,17 @@ def get_timestamp_filename():
     return "/tmp/torrent_timestamps.json"
 
 
-def clean_path(datastore=None):
+def get_datastore(datastore="", config_filename="~/.academictorrents.config"):
     if not datastore:
-        return os.getcwd() + "/datastore/"
-    if datastore.startswith("~"):
-        return os.path.expanduser(datastore) + "/"
+        with open(clean_path(config_filename), "w+") as f:
+            return json.loads(f).get("datastore", os.getcwd() + "/datastore/")
+    return clean_path(datastore)
+
+def clean_path(path=None):
+    if path.startswith("~"):
+        return os.path.expanduser(path) + "/"
     else:
-        return os.path.abspath(datastore) + "/"
+        return os.path.abspath(path) + "/"
 
 
 def write_timestamp(at_hash):
