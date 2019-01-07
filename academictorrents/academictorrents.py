@@ -7,10 +7,13 @@ from .Client import Client
 from .utils import read_timestamp, timestamp_is_within_30_days, filenames_present, write_timestamp, clean_path
 
 
-def get(at_hash, datastore="~/.academictorrents-datastore", urls=[], showlogs=False):
+def get(at_hash, datastore="", urls=[], showlogs=False):
     logging.getLogger().setLevel(logging.CRITICAL)
     if showlogs:
         logging.getLogger().setLevel(level=logging.INFO)
+
+    if not datastore:
+        datastore = "~/.academictorrents-datastore"
 
     torrent = Torrent(at_hash, datastore)
     torrent.urls = torrent.urls + urls
