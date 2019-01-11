@@ -29,10 +29,11 @@ def get(at_hash, datastore="", urls=[], showlogs=False):
     piece_manager.check_disk_pieces()
     downloaded_amount = piece_manager.check_finished_pieces()
     if float(downloaded_amount) / torrent.total_length == 1.0:
-        return path
+        print("Found dataset at " + path)
+    else:
+        print("Downloading to " + path)
+        Client(torrent, downloaded_amount, piece_manager).start()
 
-    print("Downloading to " + path)
-    Client(torrent, downloaded_amount, piece_manager).start()
     write_timestamp(at_hash)
     return path
 
