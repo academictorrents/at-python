@@ -57,7 +57,7 @@ def read_timestamp(at_hash):
     filename = get_timestamp_filename()
     try:
         f = open(filename, 'r')
-        timestamp = json.load(f).get(at_hash)
+        timestamp = json.load(f).get(at_hash, 0)
         f.close()
     except Exception:
         timestamp = 0
