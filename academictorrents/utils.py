@@ -42,7 +42,6 @@ def clean_path(path=None):
 
 def write_timestamp(at_hash):
     filename = get_timestamp_filename()
-    import pdb; pdb.set_trace()
     try:
         f = open(filename, 'r')
         timestamps = json.load(f)
