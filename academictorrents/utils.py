@@ -34,7 +34,6 @@ def get_datastore(datastore="", path_to_config_file="~/.academictorrents.config"
         datastore = datastore + "/"
     return datastore
 
-
 def clean_path(path=None):
     if path.startswith("~"):
         return os.path.expanduser(path)
@@ -43,22 +42,26 @@ def clean_path(path=None):
 
 def write_timestamp(at_hash):
     filename = get_timestamp_filename()
-    with open(filename, 'w+') as f:
-        try:
-            timestamps = json.loads(f.read())
-        except ValueError:
-            timestamps = {}
-        timestamps[at_hash] = int(datetime.datetime.now().strftime("%s"))
-        json.dump(timestamps, f)
-
+    import pdb; pdb.set_trace()
+    try:
+        f = open(filename, 'r')
+        timestamps = json.load(f)
+        f.close()
+    except Exception:
+        timestamps = {}
+    timestamps[at_hash] = int(datetime.datetime.now().strftime("%s"))
+    f = open(filename, 'w')
+    json.dump(timestamps, f)
 
 def read_timestamp(at_hash):
     filename = get_timestamp_filename()
     try:
-        with open(filename) as f:
-            return json.load(f).get(at_hash, 0)
+        f = open(filename, 'r')
+        timestamp = json.load(f).get(at_hash)
+        f.close()
     except Exception:
-        return 0
+        timestamp = 0
+    return timestamp
 
 
 def timestamp_is_within_30_days(timestamp):
