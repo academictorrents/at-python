@@ -69,7 +69,10 @@ class PeerManager(Thread):
                     msg_code = int(ord(peer.buffer[4:5]))
                     payload = peer.buffer[5:4 + msg_length]
                     peer.buffer = peer.buffer[4 + msg_length:]
-                    peer.id_function[msg_code](payload)
+                    try:
+                        peer.id_function[msg_code](payload)
+                    except KeyError:
+                        pass
 
     def request_stop(self):
         self.stop_requested = True
