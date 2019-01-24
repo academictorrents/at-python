@@ -29,7 +29,6 @@ class Client(object):
         num_web_seed_managers = len(self.peer_manager.http_peers) * 5
         for i in range(num_web_seed_managers):
             t = WebSeedManager(self.request_queue, self.peer_manager.http_peers)
-            t.setDaemon(True)
             t.start()
             self.web_seed_managers.append(t)
 
@@ -50,6 +49,9 @@ class Client(object):
         cur_downloaded = self.piece_manager.check_finished_pieces()
         progress_bar.print_progress(cur_downloaded, self.torrent.total_length, "BT:{}, Web:{}".format(len(self.peer_manager.peers), len(self.peer_manager.http_peers)), "({0:.2f}kB/s)".format(rate)) # + " Downloaded " + str(round(cur_downloaded/1000000., 2)) + "MB" )
 
+        self.new_peers_queue.join()
+        self.request_queue.join()
+
         print("\n Download Complete!") # . Downloaded " + str(cur_downloaded/1000000.) + " MB in " + str(time.time()-self.start_time) + " seconds.")
         self.piece_manager.close()
         self.tracker.request_stop()
@@ -57,3 +59,8 @@ class Client(object):
         self.peer_manager.request_stop()
         for web_seed_manager in self.web_seed_managers:
             web_seed_manager.request_stop()
+
+        self.peer_seeker.join()
+        self.peer_manager.join()
+        for web_seed_manager in self.web_seed_managers:
+            web_seed_manager.join()

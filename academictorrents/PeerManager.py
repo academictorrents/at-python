@@ -23,7 +23,6 @@ class PeerManager(Thread):
         self.piece_manager = piece_manager
         self.rarestPieces = RarestPieces.RarestPieces(piece_manager)
         self.stop_requested = False
-        self.setDaemon(True)
 
         self.pieces_by_peer = []
         for i in range(self.piece_manager.number_of_pieces):

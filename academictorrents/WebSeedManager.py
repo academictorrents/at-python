@@ -1,6 +1,6 @@
 from threading import Thread
 import urllib3
-from . import HttpPeer
+import Queue
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class WebSeedManager(Thread):
@@ -9,11 +9,13 @@ class WebSeedManager(Thread):
         self.request_queue = request_queue
         self.stop_requested = False
         self.http_peers = http_peers
-        self.setDaemon(True)
 
     def run(self):
         while not self.stop_requested:
-            httpPeer, filename, pieces = self.request_queue.get()
+            try:
+                httpPeer, filename, pieces = self.request_queue.get(timeout=1)
+            except Queue.Empty:
+                continue
             if not pieces:
                 self.request_queue.task_done()
                 continue

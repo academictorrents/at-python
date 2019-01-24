@@ -34,7 +34,6 @@ class Tracker(Thread):
         self.lstThreads = []
         self.new_peers_queue = new_peers_queue
         self.stop_requested = False
-        self.setDaemon(True)
         self.downloaded = downloaded
         self.last_message_time = int(datetime.datetime.now().strftime("%s"))
         self.last_update_time = int(datetime.datetime.now().strftime("%s"))
@@ -59,12 +58,10 @@ class Tracker(Thread):
                 continue
             elif tracker[0][:4] == "http":
                 t1 = FuncThread(self.scrapeHTTP, self.torrent, tracker[0])
-                t1.setDaemon(True)
                 self.lstThreads.append(t1)
                 t1.start()
             else:
                 t2 = FuncThread(self.scrape_udp, self.torrent, tracker[0])
-                t2.setDaemon(True)
                 self.lstThreads.append(t2)
                 t2.start()
 

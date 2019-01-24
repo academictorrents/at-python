@@ -1,6 +1,6 @@
 import time
+import Queue
 from . import Peer
-import logging
 from threading import Thread
 from pubsub import pub
 
@@ -12,7 +12,6 @@ class PeerSeeker(Thread):
         self.peer_manager = peer_manager
         self.new_peers_queue = new_peers_queue
         self.torrent = torrent
-        self.setDaemon(True)
         self.reset_time = time.time()
 
     def request_stop(self):
@@ -25,8 +24,10 @@ class PeerSeeker(Thread):
             if (time.time() - self.reset_time) > 10:
                 failed_peers = []
                 self.reset_time = time.time()
-
-            peer = self.new_peers_queue.get()
+            try:
+                peer = self.new_peers_queue.get(timeout=1)
+            except Queue.Empty:
+                continue
             peer = Peer.Peer(self.torrent, peer[0], peer[1])
             extant_peers = [(peer.ip, peer.port) for peer in self.peer_manager.peers]
             if (peer.ip, peer.port) in failed_peers or (peer.ip, peer.port) in extant_peers:
