@@ -1,5 +1,5 @@
 import time
-import Queue
+from queue import Queue
 from . import Peer
 from threading import Thread
 from pubsub import pub

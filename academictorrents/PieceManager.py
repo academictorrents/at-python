@@ -1,12 +1,10 @@
 from . import Piece
 import bitstring
 import time
-from threading import Thread
 from pubsub import pub
 from . import progress_bar
 from collections import defaultdict
 import math
-import random
 
 
 class PieceManager(object):

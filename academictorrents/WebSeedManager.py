@@ -1,6 +1,6 @@
 from threading import Thread
 import urllib3
-import Queue
+from queue import Queue
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class WebSeedManager(Thread):
