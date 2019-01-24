@@ -44,8 +44,8 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertTrue(path == os.path.abspath("..") + "/")
 
     def test_write_timestamp(self):
-        utils.write_timestamp("55a8925a8d546b9ca47d309ab438b91f7959e77f")
-        timestamp = utils.read_timestamp("55a8925a8d546b9ca47d309ab438b91f7959e77f")
+        utils.write_timestamp("test")
+        timestamp = utils.read_timestamp("test")
         self.assertTrue(isinstance(timestamp, int))
 
     def test_check_timestamp_now(self):
@@ -70,6 +70,6 @@ class UtilsTestSuite(unittest.TestCase):
 
     # Test with different datastore
     def test_different_datastore(self):
-        filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore='~/.academictorrent-datastore/alt/')
+        filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore='~/.academictorrent-datastore/alt/', use_timestamp=False)
         assert filename == os.path.expanduser('~/.academictorrent-datastore/alt/mnist.pkl.gz')
         self.assertTrue(os.path.isfile(filename))

@@ -13,7 +13,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         assert True
 
     def test_urls(self):
-        path = at.get("4e9022e7abc519733bf81a4fa353165633c371f1", urls=["https://s3.amazonaws.com/mila-genomics/testfile0.rtf"])
+        path = at.get("4e9022e7abc519733bf81a4fa353165633c371f1", urls=["https://s3.amazonaws.com/mila-genomics/testfile0.rtf"], use_timestamp=False)
         self.assertTrue(os.path.isfile(path))
 
     def test_set_datastore(self):
@@ -24,7 +24,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         os.remove(test_path_to_config_file)
 
     def test_empty_url(self):
-        path = at.get("4d563087fb327739d7ec9ee9a0d32c4cb8b0355e")
+        path = at.get("4d563087fb327739d7ec9ee9a0d32c4cb8b0355e", use_timestamp=False)
         self.assertTrue(os.path.isfile(path))
 
 if __name__ == '__main__':

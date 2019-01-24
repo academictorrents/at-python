@@ -7,7 +7,7 @@ from .Client import Client
 from .utils import read_timestamp, timestamp_is_within_30_days, filenames_present, write_timestamp, clean_path
 
 
-def get(at_hash, datastore="", urls=[], showlogs=False):
+def get(at_hash, datastore="", urls=[], showlogs=False, use_timestamp=True):
     logging.getLogger().setLevel(logging.CRITICAL)
     if showlogs:
         logging.getLogger().setLevel(level=logging.INFO)
@@ -21,7 +21,7 @@ def get(at_hash, datastore="", urls=[], showlogs=False):
 
     # Check timestamp
     timestamp = read_timestamp(at_hash)
-    if timestamp_is_within_30_days(timestamp) and filenames_present(torrent):
+    if timestamp_is_within_30_days(timestamp) and filenames_present(torrent) and use_timestamp:
         return path
 
     # Check if downloaded and finished
@@ -34,7 +34,8 @@ def get(at_hash, datastore="", urls=[], showlogs=False):
         print("Downloading to " + path)
         Client(torrent, downloaded_amount, piece_manager).start()
 
-    write_timestamp(at_hash)
+    if use_timestamp:
+        write_timestamp(at_hash)
     return path
 
 def set_datastore(datastore, path_to_config_file="~/.academictorrents.config"):

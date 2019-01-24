@@ -9,7 +9,7 @@ from academictorrents import Torrent
 class TorrentTestSuite(unittest.TestCase):
     """Test cases on the torrent.py file."""
     def test_get_file_http(self):
-        filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f')
+        filename = at.get('55a8925a8d546b9ca47d309ab438b91f7959e77f', use_timestamp=False)
         self.assertTrue(os.path.isfile(filename))
         time.sleep(3)
 
