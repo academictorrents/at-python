@@ -132,7 +132,10 @@ class Peer(object):
 
     def have(self, payload):
         index = utils.convert_bytes_to_decimal(payload)
-        self.bitfield[index] = True
+        try:
+            self.bitfield[index] = True
+        except IndexError:
+            pass
         pub.sendMessage('RarestPiece.update_peers_bitfield', bitfield=self.bitfield, peer=self)
 
     def update_bitfield(self, payload):
