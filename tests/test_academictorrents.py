@@ -10,7 +10,7 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         assert True
 
     def test_urls(self):
-        path = at.get("4e9022e7abc519733bf81a4fa353165633c371f1", urls=["https://s3.amazonaws.com/mila-genomics/testfile0.rtf"], use_timestamp=False)
+        path = at.get("323a0048d87ca79b68f12a6350a57776b6a3b7fb", urls=["http://host1.academictorrents.com/share/mnist.pkl.gz"], use_timestamp=False)
         self.assertTrue(os.path.isfile(path))
 
     def test_set_datastore(self):
