@@ -49,9 +49,6 @@ class Client(object):
         cur_downloaded = self.piece_manager.check_finished_pieces()
         progress_bar.print_progress(cur_downloaded, self.torrent.total_length, "BT:{}, Web:{}".format(len(self.peer_manager.peers), len(self.peer_manager.http_peers)), "({0:.2f}kB/s)".format(rate)) # + " Downloaded " + str(round(cur_downloaded/1000000., 2)) + "MB" )
 
-        self.new_peers_queue.join()
-        self.request_queue.join()
-
         print("\n Download Complete!") # . Downloaded " + str(cur_downloaded/1000000.) + " MB in " + str(time.time()-self.start_time) + " seconds.")
         self.piece_manager.close()
         self.tracker.request_stop()

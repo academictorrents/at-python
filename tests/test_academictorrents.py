@@ -1,9 +1,6 @@
-import academictorrents as at
-import unittest
 import os
-import shutil
-import time
-import sys
+import unittest
+import academictorrents as at
 from academictorrents.utils import clean_path
 
 class AcademicTorrentsTestSuite(unittest.TestCase):
