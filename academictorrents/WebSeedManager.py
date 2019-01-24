@@ -14,7 +14,7 @@ class WebSeedManager(Thread):
         while not self.stop_requested:
             try:
                 httpPeer, filename, pieces = self.request_queue.get(timeout=1)
-            except Queue.Empty:
+            except Exception:
                 continue
             if not pieces:
                 self.request_queue.task_done()

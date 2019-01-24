@@ -26,7 +26,7 @@ class PeerSeeker(Thread):
                 self.reset_time = time.time()
             try:
                 peer = self.new_peers_queue.get(timeout=1)
-            except Queue.Empty:
+            except Exception:
                 continue
             peer = Peer.Peer(self.torrent, peer[0], peer[1])
             extant_peers = [(peer.ip, peer.port) for peer in self.peer_manager.peers]
