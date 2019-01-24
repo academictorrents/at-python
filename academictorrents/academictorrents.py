@@ -1,6 +1,6 @@
 import logging
 import json
-from queue import Queue
+import os
 from .PieceManager import PieceManager
 from .Torrent import Torrent
 from .Client import Client
@@ -9,6 +9,9 @@ from .utils import read_timestamp, timestamp_is_within_30_days, filenames_presen
 
 def get(at_hash, datastore="", urls=[], showlogs=False, use_timestamp=True):
     logging.getLogger().setLevel(logging.CRITICAL)
+    if not os.path.isdir("/tmp/"):
+        os.makedirs("/tmp/")
+
     if showlogs:
         logging.getLogger().setLevel(level=logging.INFO)
 
