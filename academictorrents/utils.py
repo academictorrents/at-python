@@ -2,6 +2,8 @@ import hashlib
 import os
 import json
 import datetime
+import calendar
+import time
 
 
 def convert_bytes_to_decimal(headerBytes):
@@ -65,14 +67,14 @@ def read_timestamp(at_hash):
 
 def timestamp_is_within_30_days(timestamp):
     seconds_in_a_month = 86400 * 30
-    if timestamp > int(datetime.datetime.now().strftime("%s")) - seconds_in_a_month:
+    if timestamp > int(calendar.timegm(time.gmtime())) - seconds_in_a_month:
         return True
     return False
 
 
 def timestamp_is_within_10_seconds(timestamp):
     ten_seconds = 10
-    if timestamp > int(datetime.datetime.now().strftime("%s")) - ten_seconds:
+    if timestamp > int(calendar.timegm(time.gmtime())) - ten_seconds:
         return True
     return False
 

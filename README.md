@@ -26,11 +26,11 @@ import academictorrents as at
 filename = at.get("323a0048d87ca79b68f12a6350a57776b6a3b7fb")
 
 # Then work with the data
-import cPickle, gzip
+import pickle, gzip
 import sys, os, time
 
 mnist = gzip.open(filename, 'rb')
-train_set, validation_set, test_set = cPickle.load(mnist)
+train_set, valid_set, test_set = pickle.load(mnist, encoding='latin1')
 mnist.close()
 ```
 
@@ -50,7 +50,7 @@ pip install -r requirements.txt
 Done!
 
 ## Testing
-We've got a test suite that you can run with `pytest -s tests/`. These tests also run on travis after every push to github. Some of our tests are empty -- usually in parts of the codebase that have been changing quickly -- but we should continue increasing our coverage. If you want to just run one little download, use `python examples/basic_test.py` (example code above). 
+We've got a test suite that you can run with `pytest -s tests/`. These tests also run on travis after every push to github. Some of our tests are empty -- usually in parts of the codebase that have been changing quickly -- but we should continue increasing our coverage. If you want to just run one little download, use `python examples/basic_test.py` (example code above).
 
 ## Architecture
 The `academictorrents` module only has one "public" function, `.get`. This function checks for the torrent data on the filesystem. If it's not present, then it initiates a `Client` to download the data for us.
