@@ -69,11 +69,13 @@ class Torrent(object):
         for url in self.contents.get('url-list'):
             if not url:
                 continue
-            resp = requests.head(url)
-            if resp.headers.get('Accept-Ranges', False):
-                urls.append('/'.join(url.split('/')[0:-1]) + '/')
+            try:
+                resp = requests.head(url)
+                if resp.headers.get('Accept-Ranges', False):
+                    urls.append('/'.join(url.split('/')[0:-1]) + '/')
+                    continue
+            except Exception as e:
                 continue
-
             directory = self.contents.get('info', {}).get('name')
             filename = self.contents.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
             if url[-1] == '/':
