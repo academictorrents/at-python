@@ -130,12 +130,13 @@ class PeerManager(Thread):
         request = peer.build_request(index, offset, length)
         peer.send(request)
 
-    def make_requests(self, pieces_by_file):
+    def make_requests(self):
         max_requests = 50
         requests = 0
         i = 0
         if not self.peers:
             return
+        pieces_by_file = self.piece_manager.pieces_by_file()
         pieces = [pieces for _, pieces in pieces_by_file for pieces in pieces]
         while i < len(pieces) and requests < max_requests:
             piece = pieces[i]
@@ -150,10 +151,11 @@ class PeerManager(Thread):
                     requests += 1
             i += 1
 
-    def enqueue_http_requests(self, pieces_by_file):
+    def enqueue_http_requests(self):
         i = 0
         if not self.request_queue.empty() or not self.http_peers:
             return
+        pieces_by_file = self.piece_manager.pieces_by_file()
         while pieces_by_file:
             filename, pieces_containing_file = pieces_by_file.pop()
             for pieces in grouper(pieces_containing_file):

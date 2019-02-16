@@ -35,9 +35,8 @@ class Client(object):
     def start(self):
         while not self.piece_manager.finished():
             self.piece_manager.reset_pending()
-            pieces_by_file = self.piece_manager.pieces_by_file()
-            self.peer_manager.make_requests(pieces_by_file)
-            self.peer_manager.enqueue_http_requests(pieces_by_file)
+            self.peer_manager.make_requests()
+            self.peer_manager.enqueue_http_requests()
 
             # Record progress
             cur_downloaded = self.piece_manager.check_finished_pieces()
