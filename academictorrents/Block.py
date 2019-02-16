@@ -2,12 +2,13 @@ import time
 from collections import defaultdict
 
 class Block(object):
-    def __init__(self, size, time=time.time(), status="Free", data=None):
+    def __init__(self, size, time=time.time(), status="Free", data=None, piece=None):
         self.size = size
         self.status = status
         self.pending = False
         self.data = defaultdict(list)
         self.time = time
+        self.piece = piece
 
     def assemble_data(self):
         buf = bytearray(self.size)
@@ -23,6 +24,7 @@ class Block(object):
     def set_pending(self):
         self.pending = True
         self.time = int(time.time())
+        self.piece.has_pending_block = True
 
     def reset_pending(self):
         if(int(time.time()) - self.time) > 8:

@@ -17,19 +17,18 @@ class Piece(object):
         self.files_finished = {}
         self.files = []
         self.BLOCK_SIZE = BLOCK_SIZE
-        self.blocks = []
-        self.init_blocks()
+        self._blocks = []
+        self.has_pending_block = False
 
-    def init_blocks(self):
-        num_full_blocks = int(math.floor(float(self.size) / self.BLOCK_SIZE))
-        self.blocks = []
-        for _ in range(num_full_blocks):
-            self.blocks.append(Block.Block(size=self.BLOCK_SIZE))
-        if (self.size % BLOCK_SIZE) > 0:
-            self.blocks.append(Block.Block(size=self.size % BLOCK_SIZE))
-
-    def get_block_statuses(self):
-        return [block.status for block in self.blocks]
+    @property
+    def blocks(self):
+        if not self._blocks:
+            num_full_blocks = int(math.floor(float(self.size) / self.BLOCK_SIZE))
+            for _ in range(num_full_blocks):
+                self._blocks.append(Block.Block(size=self.BLOCK_SIZE, piece=self))
+            if (self.size % BLOCK_SIZE) > 0:
+                self._blocks.append(Block.Block(size=self.size % BLOCK_SIZE, piece=self))
+        return self._blocks
 
     def set_file(self, filename, data):
         try:
@@ -64,7 +63,6 @@ class Piece(object):
             if len(buf) > self.size:
                 print("resetting,...")
                 self.files_pending = {}
-                # self.reset_pending_blocks()
                 self.init_blocks()
 
             if utils.sha1_hash(buf) == self.data_hash:
@@ -87,6 +85,7 @@ class Piece(object):
     def reset_pending_blocks(self):
         for block in self.blocks:
             block.reset_pending()
+            self.has_pending_block = False
 
     def set_file_pending(self, filename):
         self.files_pending[filename] = time.time()

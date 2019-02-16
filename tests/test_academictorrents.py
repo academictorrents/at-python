@@ -9,6 +9,10 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
     def test_absolute_truth_and_meaning(self):
         assert True
 
+    # def test_ridiculously_massive_dataset(self):
+    #     path = at.get("7967a1633f7f89d3035838067a40cd807d935b3d", use_timestamp=False)
+    #     self.assertTrue(os.path.isfile(path))
+
     def test_urls(self):
         path = at.get("323a0048d87ca79b68f12a6350a57776b6a3b7fb", urls=["http://host1.academictorrents.com/share/mnist.pkl.gz"], use_timestamp=False)
         self.assertTrue(os.path.isfile(path))
