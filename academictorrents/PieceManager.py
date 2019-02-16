@@ -70,7 +70,7 @@ class PieceManager(object):
     def reset_pending(self):
         for piece in self.pieces:
             if piece.has_pending_block:
-                piece.reset_pending()
+                piece.reset_pending_blocks()
                 piece.has_pending_block = False
 
     def set_pending(self, filename, pieces):
