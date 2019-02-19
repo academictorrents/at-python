@@ -34,6 +34,8 @@ class Client(object):
 
     def start(self):
         while not self.piece_manager.finished():
+            start_time = time.time()
+
             self.piece_manager.reset_pending()
             self.peer_manager.make_requests()
             self.peer_manager.enqueue_http_requests()
