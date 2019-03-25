@@ -23,6 +23,7 @@ def get(at_hash, datastore="", urls=[], showlogs=False, use_timestamp=True):
     # Check timestamp
     timestamp = read_timestamp(at_hash)
     if timestamp_is_within_30_days(timestamp) and filenames_present(torrent) and use_timestamp:
+        print("File verified recently. Assumed still correct. Set use_timestamp=False to check again.")
         return path
 
     # Check if downloaded and finished
