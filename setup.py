@@ -10,8 +10,7 @@ with open('LICENSE') as f:
 setup(
     name='academictorrents',
     version=__version__,
-    description='Academic Torrents Python APIs',
-    long_description=readme,
+    description='Academic Torrents Python API',
     author='Martin Weiss, Alexis Gallepe, Jonathan Nogueira',
     author_email='contact@academictorrents.com',
     data_files = [("", ["LICENSE"])],
@@ -36,6 +35,6 @@ setup(
         'PyPubSub==3.3.0',
         'requests>=2.19.0',
         'future==0.16.0',
-        'tqdm'
-    ]
+        'tqdm',
+    ],
 )
