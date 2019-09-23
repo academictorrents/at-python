@@ -1,11 +1,10 @@
 from . import Piece
 import bitstring
 import time
-from pubsub import pub
-from . import progress_bar
-from collections import defaultdict
 import math
-
+from pubsub import pub
+from collections import defaultdict
+from tqdm import tqdm
 
 class PieceManager(object):
     def __init__(self, torrent):
@@ -95,12 +94,9 @@ class PieceManager(object):
         return sorted_by_length
 
     def check_disk_pieces(self):
-        i = 0
-        while i < self.number_of_pieces:
+        print("Checking pieces on disk...")
+        for i in tqdm(range(0, self.number_of_pieces)):
             self.bitfield[i] = self.pieces[i].isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
-            i += 1
-            if i % 50 == 0 or i == self.number_of_pieces:
-                progress_bar.print_progress(i - 1, self.number_of_pieces, "Checking for pieces on disk:", "")
         print("Found " + str(sum(self.bitfield)) + " finished pieces out of " + str(len(self.bitfield)) + " total pieces.")
 
     def generate_pieces(self):

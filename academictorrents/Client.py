@@ -1,11 +1,11 @@
 import time
+import sys
+from tqdm import tqdm
 from queue import Queue
-from . import progress_bar
 from .PeerSeeker import PeerSeeker
 from .PeerManager import PeerManager
 from .Tracker import Tracker
 from .WebSeedManager import WebSeedManager
-
 
 class Client(object):
     @classmethod
@@ -43,12 +43,11 @@ class Client(object):
             # Record progress
             cur_downloaded = self.piece_manager.check_finished_pieces()
             rate = (cur_downloaded - self.downloaded_amount)/(time.time()-self.start_time)/1000. # rate in KBps
-            progress_bar.print_progress(cur_downloaded, self.torrent.total_length, "BT:{}, Web:{}".format(len(self.peer_manager.peers), len(self.peer_manager.http_peers)), "({0:.2f}kB/s)".format(rate)) # + " Downloaded " + str(round(cur_downloaded/1000000., 2)) + "MB" )
             self.tracker.set_downloaded(cur_downloaded)
+            sys.stdout.write("Total Length: {}, Downloaded: {}, BT:{}, Web:{} , ({.2f}kB/s)".format(cur_downloaded, self.torrent.total_length, len(self.peer_manager.peers), len(self.peer_manager.http_peers), rate))
             time.sleep(0.1)
 
         cur_downloaded = self.piece_manager.check_finished_pieces()
-        progress_bar.print_progress(cur_downloaded, self.torrent.total_length, "BT:{}, Web:{}".format(len(self.peer_manager.peers), len(self.peer_manager.http_peers)), "({0:.2f}kB/s)".format(rate)) # + " Downloaded " + str(round(cur_downloaded/1000000., 2)) + "MB" )
 
         print("\n Download Complete!") # . Downloaded " + str(cur_downloaded/1000000.) + " MB in " + str(time.time()-self.start_time) + " seconds.")
         self.piece_manager.close()
