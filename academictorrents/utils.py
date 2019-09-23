@@ -24,7 +24,7 @@ def sha1_hash(string):
 
 
 def get_timestamp_filename():
-    return "/tmp/torrent_timestamps.json"
+    return clean_path("~/.academictorrents_timestamps.json")
 
 
 def get_datastore(datastore="", path_to_config_file="~/.academictorrents.config"):
