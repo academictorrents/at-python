@@ -38,6 +38,6 @@ setup(
         "tqdm",
     ],
     entry_points={
-        "console_scripts": ["atget = academictorrents:cli"],
+        "console_scripts": ["at-get = academictorrents:cli"],
     },
 )
