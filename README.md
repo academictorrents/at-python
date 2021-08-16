@@ -79,7 +79,7 @@ pip install -r requirements.txt
 or more direct:
 
 ```
-python -m pip install git+https://github.com/ozendelait/at-python.git
+python -m pip install git+https://github.com/AcademicTorrents/at-python.git
 ```
 
 Done!
