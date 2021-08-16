@@ -35,8 +35,8 @@ class Tracker(Thread):
         self.new_peers_queue = new_peers_queue
         self.stop_requested = False
         self.downloaded = downloaded
-        self.last_message_time = int(datetime.datetime.now().strftime("%s"))
-        self.last_update_time = int(datetime.datetime.now().strftime("%s"))
+        self.last_message_time = int(datetime.datetime.timestamp(datetime.datetime.now()))
+        self.last_update_time = int(datetime.datetime.timestamp(datetime.datetime.now()))
 
     def request_stop(self):
         self.stop_requested = True
@@ -51,7 +51,7 @@ class Tracker(Thread):
     def getPeersFromTrackers(self):
         if utils.timestamp_is_within_10_seconds(self.last_update_time):
             return
-        self.last_update_time = int(datetime.datetime.now().strftime("%s"))
+        self.last_update_time = int(datetime.datetime.timestamp(datetime.datetime.now()))
 
         for tracker in self.torrent.trackers:
             if tracker[0] == '':
@@ -118,7 +118,7 @@ class Tracker(Thread):
     def downloading_message(self):
         if utils.timestamp_is_within_10_seconds(self.last_message_time):
             return
-        self.last_message_time = int(datetime.datetime.now().strftime("%s"))
+        self.last_message_time = int(datetime.datetime.timestamp(datetime.datetime.now()))
         resp = requests.models.Response()
         if self.downloaded == 0:
             return True
