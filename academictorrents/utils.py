@@ -50,7 +50,7 @@ def write_timestamp(at_hash):
         f.close()
     except Exception:
         timestamps = {}
-    timestamps[at_hash] = int(datetime.datetime.now().strftime("%s"))
+    timestamps[at_hash] = int(datetime.datetime.timestamp(datetime.datetime.now()))
     f = open(filename, 'w')
     json.dump(timestamps, f)
 
