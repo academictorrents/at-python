@@ -76,6 +76,13 @@ git clone https://github.com/AcademicTorrents/at-python.git
 cd at-python
 pip install -r requirements.txt
 ```
+
+or more direct:
+
+```
+python -m pip install git+https://github.com/ozendelait/at-python.git
+```
+
 Done!
 
 ### Testing
