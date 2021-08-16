@@ -3,6 +3,7 @@ import bencode
 import logging
 import os
 import requests
+import tempfile
 from . import utils
 try:
     from urllib.parse import urlparse, urlencode
@@ -22,7 +23,7 @@ class Torrent(object):
         if not os.path.isdir(self.datastore):
             os.makedirs(self.datastore)
         try:
-            contents = open("/tmp/" + hash + '.torrent', 'rb').read()
+            contents = open(tempfile.gettempdir()+"/" + hash + '.torrent', 'rb').read()
         except Exception:
             contents = self.get_from_file()
             if not contents:
@@ -89,7 +90,7 @@ class Torrent(object):
         return urls
 
     def get_from_file(self):
-        torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
+        torrent_path = os.path.join(tempfile.gettempdir()+"/", self.hash + '.torrent')
         try:
             return open(torrent_path, 'rb').read()
         except Exception:
@@ -99,7 +100,7 @@ class Torrent(object):
     def get_from_url(self):
         contents = None
         url = "http://academictorrents.com/download/" + self.hash
-        torrent_path = os.path.join("/tmp/", self.hash + '.torrent')
+        torrent_path = os.path.join(tempfile.gettempdir()+"/", self.hash + '.torrent')
         response = urlopen(url, timeout=5).read()
         open(torrent_path, 'wb').write(response)
         try:
