@@ -20,7 +20,13 @@ class AcademicTorrentsTestSuite(unittest.TestCase):
         path = at.get("323a0048d87ca79b68f12a6350a57776b6a3b7fb", urls=["http://host1.academictorrents.com/share/mnist.pkl.gz"], use_timestamp=False)
         self.assertTrue(os.path.isfile(path))
         mnist = gzip.open(path, 'rb')
-        train_set, validation_set, test_set = pickle.load(mnist)
+        
+        #a hack to open py2 pickles in py3
+        u = pickle._Unpickler(mnist)
+        u.encoding = 'latin1'
+        train_set, validation_set, test_set = u.load()
+        assert train_set[0].shape[0] == 50000
+        
         mnist.close()
 
     # def test_set_datastore(self):
