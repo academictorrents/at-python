@@ -1,5 +1,12 @@
 # Academic Torrents Python API
 
+## !! Not currently maintained !!
+
+Issues reported with large files. Use https://aria2.github.io/ instead.
+
+## !! Not currently maintained !!
+
+
 ![Build Status](https://github.com/AcademicTorrents/at-python/actions/workflows/tests.yml/badge.svg)
 
 [![codecov](https://codecov.io/gh/AcademicTorrents/at-python/branch/master/graph/badge.svg)](https://codecov.io/gh/AcademicTorrents/at-python)
