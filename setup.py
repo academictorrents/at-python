@@ -35,7 +35,7 @@ setup(
         "bitstring==3.1.5",
         "PyPubSub==3.3.0",
         "requests>=2.19.0",
-        "future==0.16.0",
+        "future==1.0.0",
         "tqdm",
     ],
     entry_points={
