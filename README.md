@@ -25,7 +25,7 @@ at-get 323a0048d87ca79b68f12a6350a57776b6a3b7fb -o ~/Downloads
 
 ## For people who want to download datasets
 
-We are compatible with Python 3.8 and newer.
+We are compatible with Python 3.10 and newer.
 
 To install:
 `pip install academictorrents`

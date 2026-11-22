@@ -20,7 +20,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
     ),
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     license=license,
     packages=find_packages(exclude=("tests", "docs")),
     install_requires=[
