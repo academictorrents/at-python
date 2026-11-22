@@ -4,12 +4,14 @@ from pubsub import pub
 from threading import Thread
 import urllib3
 import logging
+from . import utils
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class HttpPeer(object):
     def __init__(self, url):
         self.url = url
         self.sess = requests.Session()
+        self.sess.headers.update(utils.HEADERS)
         self.fail_files = []
 
     def request_ranges(self, filename, pieces):
@@ -17,6 +19,7 @@ class HttpPeer(object):
         end = start
         for piece in pieces:
             end += piece.get_length(filename)
+        end -= 1  # HTTP Range end is inclusive
         try:
             return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=5)
         except Exception as e:
