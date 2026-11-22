@@ -1,189 +1,128 @@
+import time
 import select
 import struct
-from queue import Queue
-try:
-    from itertools import zip_longest as zip_longest
-except:
-    from itertools import izip_longest as zip_longest
-import time
 import logging
+import threading
 from threading import Thread
-from pubsub import pub
-from . import utils
-from . import RarestPieces
-from .HttpPeer import HttpPeer
+from . import Peer as peer_mod
+
+logger = logging.getLogger(__name__)
+
+MAX_OUTSTANDING = 32  # block requests in flight per peer
+PEER_SILENCE_TIMEOUT = 30  # forget outstanding requests a peer never answered
 
 
 class PeerManager(Thread):
-    def __init__(self, urls, piece_manager, request_queue):
-        Thread.__init__(self)
+    """Owns all BitTorrent peer sockets: reads, parses and requests in one thread."""
+
+    def __init__(self, piece_manager, stop_event):
+        Thread.__init__(self, daemon=True)
         self.peers = []
-        self.http_peers = []
-        self.request_queue = request_queue
+        self.lock = threading.Lock()
         self.piece_manager = piece_manager
-        self.rarestPieces = RarestPieces.RarestPieces(piece_manager)
-        self.stop_requested = False
-
-        self.pieces_by_peer = []
-        for i in range(self.piece_manager.number_of_pieces):
-            self.pieces_by_peer.append([0, []])
-        for url in urls:
-            self.http_peers.append(HttpPeer(url))
-
-        # Events
-        pub.subscribe(self.add_peer, 'PeerManager.new_peer')
-        pub.subscribe(self.peers_bitfield, 'PeerManager.update_peers_bitfield')
+        self.stop_event = stop_event
 
     def run(self):
-        while not self.stop_requested:
-            self.start_connection_to_peers()
-            read = [p.socket for p in self.peers]
-            readList, _, _ = select.select(read, [], [], 1)
-
-            # Receive from peers
-            for socket in readList:
-                peer = self.get_peer_by_socket(socket)
-                try:
-                    msg = socket.recv(1024)
-                except Exception as e:
-                    logging.info(peer.ip + ": removing peer because of: " + str(e))
-                    self.remove_peer(peer)
-                    continue
-
-                if not msg:
-                    logging.error(peer.ip + ": removing peer because we received a message of 0 length")
-                    self.remove_peer(peer)
-                    continue
-
-                peer.buffer += msg
-
-                if not peer.has_handshaked:
-                    peer.check_handshake()
-                    continue
-
-                if len(peer.buffer) < 4 or struct.unpack("!I", peer.buffer[:4])[0] == 0:  # keep alive
-                    continue
-
-                msg_length = utils.convert_bytes_to_decimal(peer.buffer[0:4])
-                while len(peer.buffer) >= 4 + msg_length:
-                    msg_code = int(ord(peer.buffer[4:5]))
-                    payload = peer.buffer[5:4 + msg_length]
-                    peer.buffer = peer.buffer[4 + msg_length:]
-                    try:
-                        peer.id_function[msg_code](payload)
-                    except KeyError:
-                        pass
-
-    def request_stop(self):
-        self.stop_requested = True
-
-    def peers_bitfield(self, bitfield=None, peer=None, index=None):
-        if index is not None:
-            self.pieces_by_peer[index] = ["", []]
-            return
-
-        for i in range(len(self.pieces_by_peer)):
-            if bitfield[i] == 1 and peer not in self.pieces_by_peer[i][1] and not self.pieces_by_peer[i][0] == "":
-                self.pieces_by_peer[i][1].append(peer)
-                self.pieces_by_peer[i][0] = len(self.pieces_by_peer[i][1])
-
-    def get_unchoked_peer(self, index):
-        for peer in self.peers:
-            if peer.bitfield[index] and not peer.state["peer_choking"]:
-                return peer
-        return False
-
-    def start_connection_to_peers(self):
-        peers_to_handshake = [peer for peer in self.peers if not peer.has_handshaked and peer.last_handshake_attempt < time.time() - 10]
-        for peer in peers_to_handshake:
-            peer.last_handshake_attempt = time.time()
+        while not self.stop_event.is_set():
             try:
-                peer.handshake()
-                interested = peer.build_interested()
-                peer.send(interested)
+                self.tick()
+            except Exception:
+                logger.exception("peer manager error")
+                self.stop_event.wait(1)
+        with self.lock:
+            for peer in self.peers:
+                peer.close()
+            self.peers = []
+
+    def tick(self):
+        with self.lock:
+            peers = list(self.peers)
+        self.start_connection_to_peers(peers)
+        peers = [p for p in peers if p.socket]
+        if not peers:
+            self.stop_event.wait(0.5)
+            return
+        readable, _, _ = select.select([p.socket for p in peers], [], [], 0.5)
+        by_socket = {p.socket: p for p in peers}
+        for sock in readable:
+            peer = by_socket[sock]
+            try:
+                data = sock.recv(1 << 16)
+                if not data:
+                    raise ConnectionError("connection closed")
+                for msg_id, payload in peer.feed(data):
+                    self.handle_message(peer, msg_id, payload)
             except Exception as e:
-                logging.error(peer.ip + ": removing peer because of: " + str(e))
+                logger.info("%s: removing peer because of: %s", peer.ip, e)
+                self.remove_peer(peer)
+        self.make_requests(peers)
+
+    def handle_message(self, peer, msg_id, payload):
+        if msg_id == peer_mod.CHOKE:
+            peer.state['peer_choking'] = True
+            peer.outstanding = 0  # a choke discards our pending requests
+        elif msg_id == peer_mod.UNCHOKE:
+            peer.state['peer_choking'] = False
+        elif msg_id == peer_mod.INTERESTED:
+            peer.state['peer_interested'] = True
+        elif msg_id == peer_mod.NOT_INTERESTED:
+            peer.state['peer_interested'] = False
+        elif msg_id == peer_mod.HAVE and len(payload) == 4:
+            peer.set_have(struct.unpack('!I', payload)[0])
+        elif msg_id == peer_mod.BITFIELD:
+            peer.set_bitfield(payload)
+        elif msg_id == peer_mod.PIECE and len(payload) >= 8:
+            index, offset = struct.unpack('!II', payload[:8])
+            peer.outstanding = max(0, peer.outstanding - 1)
+            peer.last_block_time = time.time()
+            self.piece_manager.receive(index, offset, payload[8:])
+        # REQUEST/CANCEL/PORT: we don't upload
+
+    def make_requests(self, peers):
+        now = time.time()
+        for peer in peers:
+            if not peer.has_handshaked or peer.state['peer_choking']:
+                continue
+            if peer.outstanding and now - peer.last_block_time > PEER_SILENCE_TIMEOUT:
+                peer.outstanding = 0
+                peer.last_block_time = now
+            wanted = MAX_OUTSTANDING - peer.outstanding
+            if wanted <= 0:
+                continue
+            requests = self.piece_manager.next_bt_requests(peer.has_piece, wanted)
+            try:
+                for index, offset, length in requests:
+                    peer.send(peer.build_request(index, offset, length))
+                    peer.outstanding += 1
+            except Exception as e:
+                logger.info("%s: removing peer because of: %s", peer.ip, e)
                 self.remove_peer(peer)
 
+    def start_connection_to_peers(self, peers):
+        now = time.time()
+        for peer in peers:
+            if peer.socket and not peer.has_handshaked and peer.last_handshake_attempt < now - 10:
+                peer.last_handshake_attempt = now
+                try:
+                    peer.handshake()
+                    peer.send(peer.build_interested())
+                except Exception as e:
+                    logger.info("%s: removing peer because of: %s", peer.ip, e)
+                    self.remove_peer(peer)
+
     def add_peer(self, peer):
-        self.peers.append(peer)
+        with self.lock:
+            self.peers.append(peer)
 
     def remove_peer(self, peer):
-        if peer in self.peers:
-            try:
-                peer.socket.close()
-            except Exception:
-                pass
-            self.peers.remove(peer)
+        peer.close()
+        with self.lock:
+            if peer in self.peers:
+                self.peers.remove(peer)
 
-        for rarestPiece in self.rarestPieces.rarestPieces:
-            if peer in rarestPiece["peers"]:
-                rarestPiece["peers"].remove(peer)
+    def known_addresses(self):
+        with self.lock:
+            return {(p.ip, p.port) for p in self.peers}
 
-    def get_peer_by_socket(self, socket):
-        for peer in self.peers:
-            if socket == peer.socket:
-                return peer
-        raise ("peer not present in PeerList")
-
-    def request_new_piece(self, peer, index, offset, length):
-        request = peer.build_request(index, offset, length)
-        peer.send(request)
-
-    def make_requests(self):
-        max_requests = 50
-        requests = 0
-        i = 0
-        if not self.peers:
-            return
-        pieces_by_file = self.piece_manager.pieces_by_file()
-        pieces = [pieces for _, pieces in pieces_by_file for pieces in pieces]
-        while i < len(pieces) and requests < max_requests:
-            piece = pieces[i]
-            peer = self.get_unchoked_peer(piece.index)
-            if not peer:
-                i += 1
-                continue
-            for idx, block in enumerate(piece.blocks):
-                if block.status == "Free" or block.status == "Partial":
-                    block.set_pending()
-                    self.request_new_piece(peer, piece.index, idx * piece.BLOCK_SIZE, block.size)
-                    requests += 1
-            i += 1
-
-    def enqueue_http_requests(self):
-        i = 0
-        if not self.request_queue.empty() or not self.http_peers:
-            return
-        pieces_by_file = self.piece_manager.pieces_by_file()
-        while pieces_by_file:
-            filename, pieces_containing_file = pieces_by_file.pop()
-            for pieces in grouper(pieces_containing_file):
-                self.piece_manager.set_pending(filename, pieces)
-                for peer in self.http_peers:
-                    if filename not in peer.fail_files:
-                        self.request_queue.put((peer, filename, pieces), False)
-                        i += 1
-                        break
-
-def grouper(pieces, max_bytes=5000000):
-    """Split pieces into runs that can each be fetched with one HTTP Range request.
-
-    A run must be contiguous: HttpPeer.request_ranges fetches one byte range and
-    slices it sequentially, so a gap (a piece already on disk) would shift every
-    following piece's data and make it fail its hash check forever.
-    """
-    resp = []
-    group = []
-    length = 0
-    for piece in sorted((p for p in pieces if p), key=lambda p: p.index):
-        contiguous = not group or piece.index == group[-1].index + 1
-        if group and (not contiguous or length >= max_bytes):
-            resp.append(group)
-            group = []
-            length = 0
-        group.append(piece)
-        length += piece.size
-    if group:
-        resp.append(group)
-    return resp
+    def request_stop(self):
+        self.stop_event.set()

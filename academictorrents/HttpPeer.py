@@ -1,34 +1,89 @@
-import requests
-import math
-from pubsub import pub
-from threading import Thread
-import urllib3
+import time
 import logging
+import threading
+from collections import defaultdict
+import requests
+import urllib3
 from . import utils
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+logger = logging.getLogger(__name__)
+
+
+class WebSeedError(Exception):
+    pass
+
+
 class HttpPeer(object):
-    def __init__(self, url):
+    """One web seed (BEP 19) with per-file failure tracking and backoff."""
+    MAX_FILE_FAILURES = 3  # ban this seed for a file after this many failures
+    MAX_BACKOFF = 60
+    CHUNK_SIZE = 1 << 16
+
+    def __init__(self, url, torrent=None):
         self.url = url
+        self.torrent = torrent
         self.sess = requests.Session()
         self.sess.headers.update(utils.HEADERS)
-        self.fail_files = []
+        self.lock = threading.Lock()
+        self.file_failures = defaultdict(int)
+        self.consecutive_failures = 0
+        self.backoff_until = 0
 
-    def request_ranges(self, filename, pieces):
-        start = pieces[0].get_file_offset(filename)
-        end = start
-        for piece in pieces:
-            end += piece.get_length(filename)
-        end -= 1  # HTTP Range end is inclusive
+    def url_for(self, relpath):
+        if self.torrent is None:
+            return self.url + relpath
+        return self.torrent.web_seed_url(self.url, relpath)
+
+    def can_serve(self, relpath, now=None):
+        now = time.time() if now is None else now
+        with self.lock:
+            return now >= self.backoff_until and self.file_failures[relpath] < self.MAX_FILE_FAILURES
+
+    def is_banned(self, relpath):
+        with self.lock:
+            return self.file_failures[relpath] >= self.MAX_FILE_FAILURES
+
+    def record_failure(self, relpath):
+        with self.lock:
+            self.file_failures[relpath] += 1
+            self.consecutive_failures += 1
+            delay = min(self.MAX_BACKOFF, 2 ** (self.consecutive_failures - 1))
+            self.backoff_until = time.time() + delay
+
+    def record_success(self):
+        with self.lock:
+            self.consecutive_failures = 0
+            self.backoff_until = 0
+
+    def fetch(self, relpath, start, length, sink):
+        """Stream bytes [start, start+length) of a file into sink(chunk).
+
+        Returns the number of bytes delivered. Raises WebSeedError if the
+        server does not honour the range request.
+        """
+        end = start + length - 1  # HTTP Range end is inclusive
+        resp = self.sess.get(self.url_for(relpath), headers={'Range': 'bytes=%d-%d' % (start, end)},
+                             stream=True, verify=False, timeout=(10, 30))
         try:
-            return self.sess.get(self.url + filename, headers={'Range': 'bytes=' + str(start) + '-' + str(end)}, verify=False, timeout=5)
-        except Exception as e:
-            logging.info(str(e))
-            return False
+            if resp.status_code != 206:
+                # Never read the body: a server ignoring Range sends the whole file.
+                raise WebSeedError("HTTP %d for %s" % (resp.status_code, relpath))
+            content_range = resp.headers.get('Content-Range', '')
+            if content_range and not content_range.replace(' ', '').startswith('bytes%d-' % start):
+                raise WebSeedError("unexpected Content-Range %r" % content_range)
+            got = 0
+            for chunk in resp.iter_content(self.CHUNK_SIZE):
+                if not chunk:
+                    continue
+                chunk = chunk[:length - got]
+                sink(chunk)
+                got += len(chunk)
+                if got >= length:
+                    break
+            return got
+        finally:
+            resp.close()
 
-    def publish_responses(self, response, filename, pieces):
-        offset = 0
-        for piece in pieces:
-            size = piece.get_length(filename)
-            pub.sendMessage('PieceManager.receive_file', piece=(piece.index, filename, response.content[offset: offset + size]))
-            offset += size
+    def close(self):
+        self.sess.close()

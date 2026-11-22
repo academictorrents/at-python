@@ -25,7 +25,6 @@ setup(
     packages=find_packages(exclude=("tests", "docs")),
     install_requires=[
         "bencode.py>=2.0.0",
-        "PyPubSub>=4.0.0",
         "requests>=2.19.0",
         "urllib3",
         "tqdm",

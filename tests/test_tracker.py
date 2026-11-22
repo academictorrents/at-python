@@ -1,3 +1,4 @@
+import pytest
 import academictorrents as at
 import unittest
 import os
@@ -11,12 +12,14 @@ from academictorrents import Torrent, Tracker
 class TrackerTestSuite(unittest.TestCase):
     """Test cases on the tracker.py file."""
 
+    @pytest.mark.network
     def test_stop_message_already_downloaded(self):
         torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", "./tests/")
         q = Queue()
         tracker = Tracker.Tracker(torrent, q, torrent.total_length)
         self.assertTrue(tracker.stop_message())
 
+    @pytest.mark.network
     def test_stop_message_stopped(self):
         torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", "./tests/")
         q = Queue()
@@ -25,6 +28,7 @@ class TrackerTestSuite(unittest.TestCase):
         self.assertTrue(resp.status_code == 200)
         self.assertTrue(params['event'] == 'stopped')
 
+    @pytest.mark.network
     def test_stop_message_finished(self):
         torrent = Torrent.Torrent("55a8925a8d546b9ca47d309ab438b91f7959e77f", "./tests/")
         q = Queue()

@@ -1,5 +1,7 @@
 init:
 	pip install -r requirements.txt
 test:
-	pytest tests -v --timeout=900
+	pytest tests -v
+test-network:
+	pytest tests -v --network --timeout=900
 

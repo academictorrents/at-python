@@ -1,154 +1,104 @@
-import math
-import time
-from . import utils
-import itertools
-from collections import defaultdict, OrderedDict
-from pubsub import pub
-from . import Block
+"""Per-piece download state.
+
+A piece only holds memory while it is in flight: ``buf`` and the received
+ranges are allocated on the first write and dropped once the piece is written
+to disk or reset. Finished pieces are tracked by PieceManager's bitfield.
+"""
 BLOCK_SIZE = 2 ** 14
 
 
 class Piece(object):
+    __slots__ = ("index", "size", "data_hash", "files", "buf", "ranges",
+                 "block_pending", "file_pending", "verifying")
+
     def __init__(self, index, size, data_hash):
         self.index = index
         self.size = size
         self.data_hash = data_hash
-        self.files_pending = {}
-        self.files_finished = {}
-        self.files = []
-        self.BLOCK_SIZE = BLOCK_SIZE
-        self._blocks = []
-        self.has_pending_block = False
+        self.files = []  # segments: dicts with relpath, path, file_offset, piece_offset, length
+        self.reset()
 
     @property
-    def blocks(self):
-        if not self._blocks:
-            num_full_blocks = int(math.floor(float(self.size) / self.BLOCK_SIZE))
-            for _ in range(num_full_blocks):
-                self._blocks.append(Block.Block(size=self.BLOCK_SIZE, piece=self))
-            if (self.size % BLOCK_SIZE) > 0:
-                self._blocks.append(Block.Block(size=self.size % BLOCK_SIZE, piece=self))
-        return self._blocks
+    def num_blocks(self):
+        return -(-self.size // BLOCK_SIZE)
 
-    def set_file(self, filename, data):
-        try:
-            index = int(self.get_offset(filename) / BLOCK_SIZE)
-            offset = int(self.get_offset(filename) % self.BLOCK_SIZE)
-        except Exception:
-            return
-        done = 0
-        while done != len(data):
-            if offset != 0:
-                self.blocks[index].status = "Partial"
-                amount = min(self.BLOCK_SIZE - offset, len(data))
-            elif len(data) - done < self.blocks[index].size:
-                self.blocks[index].status = "Partial"
-                amount = len(data) - done
-            else:
-                self.blocks[index].status = "Full"
-                amount = self.blocks[index].size if len(data) - done > self.BLOCK_SIZE else len(data) - done
-            self.blocks[index].data[offset] = data[done: done + amount]
+    def block_length(self, block):
+        return min(BLOCK_SIZE, self.size - block * BLOCK_SIZE)
 
-            # increment counts
-            done += amount
-            offset = (offset + amount) % self.BLOCK_SIZE
-            index += 1
-        self.try_complete()
+    def reset(self):
+        # Containers are created on demand so idle pieces stay small.
+        self.buf = None
+        self.ranges = ()  # sorted, merged [start, end) byte ranges received
+        self.block_pending = None  # block index -> time requested
+        self.file_pending = None  # relpath -> time requested
+        self.verifying = False
 
-    def try_complete(self):
-        if all([block.status == "Full" or block.status == "Partial" for block in self.blocks]):
-            buf = bytearray(b"")
-            for index in range(len(self.blocks)):
-                buf.extend(self.blocks[index].assemble_data())
-            if len(buf) > self.size:
-                print("resetting,...")
-                self.files_pending = {}
-                self.init_blocks()
-
-            if utils.sha1_hash(buf) == self.data_hash:
-                for filename in self.files_pending:
-                    self.add_file_finished(filename)
-                self.files_pending = {}
-                self.writeFilesOnDisk(buf)
-                pub.sendMessage('PieceManager.update_bitfield', index=self.index)
-
-    def set_block(self, offset, data):
-        index = int(offset / BLOCK_SIZE)
-        self.blocks[index].data[offset % BLOCK_SIZE] = bytearray(data)
-        self.blocks[index].status = "Full"
-        self.try_complete()
-
-    def set_all_blocks_pending(self):
-        for block in self.blocks:
-            block.set_pending()
-
-    def reset_pending_blocks(self):
-        for block in self.blocks:
-            block.reset_pending()
-            self.has_pending_block = False
-
-    def set_file_pending(self, filename):
-        self.files_pending[filename] = time.time()
-
-    def remove_file_pending(self, filename):
-        try:
-            del self.files_pending[filename]
-        except KeyError:
-            pass
-
-    def add_file_finished(self, filename):
-        self.files_finished[filename] = True
-
-    def isCompleteOnDisk(self):
-        block_offset = 0
-        data = b''
+    def get_segment(self, relpath):
         for f in self.files:
-            try:
-                f_ptr = open(f["path"], 'rb')
-            except IOError:
-                break
-            f_ptr.seek(f["file_offset"])
-            data += f_ptr.read(f["length"])
-            f_ptr.close()
-            block_offset += f['length']
+            if f["relpath"] == relpath:
+                return f
+        return None
 
-        if data and utils.sha1_hash(data) == self.data_hash:
-            data = bytearray(b'')
-            for block in self.blocks:
-                block.status = "Full"
-            return True
+    def covered(self, start, end):
+        for a, b in self.ranges:
+            if a <= start and end <= b:
+                return True
+            if a > start:
+                return False
         return False
 
-    def writeFunction(self, pathFile, data, offset):
-        try:
-            f = open(pathFile, 'r+b')
-        except IOError:
-            f = open(pathFile, 'wb')
-        f.seek(offset)
-        f.write(data)
-        f.close()
+    def is_full(self):
+        return len(self.ranges) == 1 and self.ranges[0] == (0, self.size)
 
-    def writeFilesOnDisk(self, data):
-        for f in self.files:
-            pathFile = f["path"]
-            file_offset = f["file_offset"]
-            piece_offset = f["piece_offset"]
-            length = f["length"]
-            self.writeFunction(pathFile, data[piece_offset: piece_offset + length], file_offset)
-        for block in self.blocks:
-            block.data = {0: bytearray(b'')}
+    def write(self, offset, data):
+        """Store data at offset. Returns True if the piece is now full."""
+        end = offset + len(data)
+        if offset < 0 or end > self.size or not data:
+            return False
+        if self.buf is None:
+            self.buf = bytearray(self.size)
+        self.buf[offset:end] = data
+        merged = []
+        start = offset
+        for a, b in self.ranges:
+            if b < start or a > end:
+                merged.append((a, b))
+            else:
+                start, end = min(a, start), max(b, end)
+        merged.append((start, end))
+        merged.sort()
+        self.ranges = merged
+        return self.is_full()
 
-    def get_file_offset(self, filename):
-        for f in self.files:
-            if f.get('path').split('/')[-1] == filename:
-                return f.get('file_offset')
+    def set_block_pending(self, block, now):
+        if self.block_pending is None:
+            self.block_pending = {}
+        self.block_pending[block] = now
 
-    def get_length(self, filename):
-        for f in self.files:
-            if f.get('path').split('/')[-1] == filename:
-                return f.get('length')
+    def set_file_pending(self, relpath, now):
+        if self.file_pending is None:
+            self.file_pending = {}
+        self.file_pending[relpath] = now
 
-    def get_offset(self, filename):
-        for f in self.files:
-            if f.get('path').split('/')[-1] == filename:
-                return math.floor(f.get('piece_offset'))
+    def clear_file_pending(self, relpath):
+        if self.file_pending:
+            self.file_pending.pop(relpath, None)
+
+    def missing_blocks(self, now, timeout):
+        """Blocks not received and not requested in the last `timeout` seconds."""
+        out = []
+        for i in range(self.num_blocks):
+            start = i * BLOCK_SIZE
+            if self.covered(start, start + self.block_length(i)):
+                continue
+            t = self.block_pending.get(i) if self.block_pending else None
+            if t is not None and now - t < timeout:
+                continue
+            out.append(i)
+        return out
+
+    def segment_needed(self, seg, now, timeout):
+        if self.covered(seg["piece_offset"], seg["piece_offset"] + seg["length"]):
+            return False
+        t = self.file_pending.get(seg["relpath"]) if self.file_pending else None
+        return t is None or now - t >= timeout
