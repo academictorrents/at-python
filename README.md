@@ -93,9 +93,11 @@ python -m pip install git+https://github.com/AcademicTorrents/at-python.git
 Done!
 
 ### Testing
-We have a test suite that you can run with `pytest -s tests/`. These tests also run on travis after every push to github. Some of our tests are empty -- usually in parts of the codebase that have been changing quickly -- but we should continue increasing our coverage. If you want to just run one little download, use `python examples/basic_test.py` (example code above).
+Run `pytest tests/` for the offline suite: it downloads generated torrents from a local HTTP web seed, so it needs no internet. Tests that use live trackers and web seeds are marked `network` and skipped by default; run them with `pytest tests/ --network`. If you want to just run one little download, use `python examples/basic_test.py` (example code above).
 
 ### Architecture
 The `academictorrents` module only has one "public" function, `.get`. This function checks for the torrent data on the filesystem. If it is not present, then it initiates a `Client` to download the data for us.
 
-`Client` is our main thread, it manages the lifecycle of our other threads including `Tracker`, `PeerManager`, `PieceManager`, and many `WebSeedManager` threads. The `Client` thread uses the `PieceManager` class (not thread) to keep track of all the pieces of data. The main thread makes socket requests to `Peer`s, and enqueues jobs to request data from `HttpPeer`s. Socket responses are handled by `PeerManager`, whereas a fleet of `WebSeedManagers` threads handles the `HttpPeer`s.
+`Client` runs the main loop and owns the worker threads: `Tracker` (HTTP and UDP announces), `PeerSeeker` (connects to new peers), `PeerManager` (reads, parses and requests on all BitTorrent sockets) and a pool of `WebSeedManager` threads that stream HTTP range requests from `HttpPeer` web seeds. All threads are daemons; `get()` raises `DownloadStalled` if no piece completes for `stall_timeout` seconds.
+
+`PieceManager` is the thread-safe store of piece state. A `Piece` only holds a buffer while it is in flight; once its SHA-1 matches it is written to disk through `Storage` (cached file handles) and dropped, and the piece's bit is set in the bitfield. A resume file (`.<name>.at-resume.json` in the datastore) records the bitfield plus each file's size and mtime, so a restart only re-hashes pieces whose files changed, using a thread pool.

@@ -4,103 +4,126 @@ import logging
 import os
 import requests
 import tempfile
+from urllib.parse import quote
 from . import utils
-try:
-    from urllib.parse import urlparse, urlencode
-    from urllib.request import urlopen, Request
-    from urllib.error import HTTPError
-except ImportError:
-    from urlparse import urlparse
-    from urllib import urlencode
-    from urllib2 import urlopen, Request, HTTPError
+
+logger = logging.getLogger(__name__)
 
 
 class Torrent(object):
     def __init__(self, hash, datastore):
         self.hash = hash
         self.datastore = utils.get_datastore(datastore=datastore)
-        contents = ""
         if not os.path.isdir(self.datastore):
             os.makedirs(self.datastore)
-        try:
-            contents = open(tempfile.gettempdir()+"/" + hash + '.torrent', 'rb').read()
-        except Exception:
-            contents = self.get_from_file()
-            if not contents:
-                contents = self.get_from_url()
-            if not contents:
-                raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.datastore))
+        contents = self.get_from_file()
+        if not contents:
+            contents = self.get_from_url()
+        if not contents:
+            raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.datastore))
 
         self.contents = bencode.decode(contents)
         self.total_length = 0
         self.piece_length = self.contents['info']['piece length']
         self.pieces = self.contents['info']['pieces']
+        if isinstance(self.pieces, str):  # bencode.py decodes valid utf-8 to str
+            self.pieces = self.pieces.encode('utf-8')
+        self.single_file = 'files' not in self.contents['info']
 
         self.info_hash = utils.sha1_hash(bencode.encode(self.contents['info']))
         self.peer_id = self.generate_peer_id()
         self.trackers = self.get_trackers()
-        self.urls = self.get_urls()
         self.filenames = []
-
         self.get_files()
         self.number_of_pieces = -(-self.total_length // self.piece_length)  # ceil, as int
+        self.urls = []
+        self.add_web_seeds(self.contents.get('url-list') or [])
 
-        logging.debug(self.trackers)
-        logging.debug(self.filenames)
+        logger.debug(self.trackers)
+        logger.debug(self.filenames)
 
         assert(self.total_length > 0)
         assert(len(self.filenames) > 0)
 
         name = self.contents['info']['name']
-        if "length" in self.contents['info']:
-            size_mb = self.contents['info']['length']/1000./1000.
-        else:
-            total_length = 0
-            for f in self.contents['info']['files']:
-                total_length += f['length']
-            size_mb = total_length/1000./1000.
+        print("Torrent name: " + name + ", Size: {0:.2f}MB".format(self.total_length / 1000. / 1000.))
 
-        print("Torrent name: " + name + ", Size: {0:.2f}MB".format(size_mb))
+    # ---- web seeds (BEP 19) -------------------------------------------------
 
-    def get_urls(self):
-        urls = []
-        for url in self.contents.get('url-list'):
+    def add_web_seeds(self, urls):
+        if isinstance(urls, (str, bytes)):
+            urls = [urls]
+        for url in urls:
+            if isinstance(url, bytes):
+                url = url.decode('utf-8', 'replace')
             if not url:
                 continue
-            try:
-                resp = requests.head(url, headers=utils.HEADERS, timeout=10)
-                if resp.headers.get('Accept-Ranges', False):
-                    urls.append('/'.join(url.split('/')[0:-1]) + '/')
-                    continue
-            except Exception as e:
-                continue
-            directory = self.contents.get('info', {}).get('name')
-            filename = self.contents.get('info', {}).get('files', [{'path': ['']}])[0].get('path')[0]
-            if url[-1] == '/':
-                url = url + directory + '/'
-            else:
-                url = url + '/' + directory + '/'
+            base = self.resolve_web_seed(url)
+            if base and base not in self.urls:
+                self.urls.append(base)
+        return self.urls
 
-            try:
-                resp = requests.head(url + filename, headers=utils.HEADERS, timeout=10)
-            except Exception:
+    def get_urls(self):
+        return self.urls
+
+    def web_seed_candidates(self, url):
+        """Possible bases for a web seed URL, most standard first.
+
+        For a single-file torrent a base is the file's URL. For a multi-file
+        torrent it is the directory that the files' relative paths are
+        appended to.
+        """
+        name = quote(self.contents['info']['name'])
+        slash = url if url.endswith('/') else url + '/'
+        if self.single_file:
+            if url.endswith('/'):
+                return [url + name]
+            return [url, slash + name]
+        # BEP 19: <url>/<name>/<path>. Also accept a URL that points at the
+        # torrent's directory itself or at a file inside it.
+        return [slash + name + '/', slash, url.rsplit('/', 1)[0] + '/']
+
+    def web_seed_url(self, base, relpath):
+        if self.single_file:
+            return base
+        return base + quote(relpath)
+
+    def resolve_web_seed(self, url):
+        probe = self.filenames[0]['relpath']
+        seen = set()
+        for base in self.web_seed_candidates(url):
+            if base in seen:
                 continue
-            if resp.headers.get('Accept-Ranges', False):
-                urls.append(url)
-        return urls
+            seen.add(base)
+            try:
+                resp = requests.head(self.web_seed_url(base, probe), headers=utils.HEADERS,
+                                     timeout=10, allow_redirects=True, verify=False)
+                resp.close()
+            except Exception as e:
+                logger.info("web seed %s unreachable: %s", base, e)
+                continue
+            ranges = resp.headers.get('Accept-Ranges', '').lower()
+            if resp.status_code < 400 and ranges and ranges != 'none':
+                return base
+        logger.info("web seed %s does not serve this torrent with range requests", url)
+        return None
+
+    # ---- .torrent file ------------------------------------------------------
+
+    def torrent_cache_path(self):
+        return os.path.join(tempfile.gettempdir(), self.hash + '.torrent')
 
     def get_from_file(self):
-        torrent_path = os.path.join(tempfile.gettempdir()+"/", self.hash + '.torrent')
         try:
-            return open(torrent_path, 'rb').read()
+            with open(self.torrent_cache_path(), 'rb') as f:
+                return f.read()
         except Exception:
             return None
-        return
 
     def get_from_url(self):
         # Send the AT-Client user-agent: the default Python-urllib one gets a 403.
         url = "https://academictorrents.com/download/" + self.hash
-        torrent_path = os.path.join(tempfile.gettempdir(), self.hash + '.torrent')
+        torrent_path = self.torrent_cache_path()
         response = requests.get(url, timeout=30, headers=utils.HEADERS)
         response.raise_for_status()
         contents = response.content
@@ -112,28 +135,27 @@ class Torrent(object):
         return contents
 
     def get_files(self):
-        root = self.datastore + self.contents['info']['name']
+        name = self.contents['info']['name']
+        if name in ('', '.', '..') or '/' in name or '\\' in name:
+            raise ValueError("unsafe torrent name: " + repr(name))
+        root = self.datastore + name
         if 'files' in self.contents['info']:
-            if not os.path.exists(root):
-                os.mkdir(root, 0o766)
-
             for f in self.contents['info']['files']:
-                path = os.path.join(root, *f["path"])
-
-                if not os.path.exists(os.path.dirname(path)):
-                    os.makedirs(os.path.dirname(path))
-
-                self.filenames.append({"path": path, "length": f["length"]})
+                parts = [p.decode('utf-8', 'replace') if isinstance(p, bytes) else p for p in f["path"]]
+                if any(p in ('', '.', '..') or '/' in p or '\\' in p for p in parts):
+                    raise ValueError("unsafe path in torrent: " + repr(f["path"]))
+                path = os.path.join(root, *parts)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                self.filenames.append({"path": path, "relpath": "/".join(parts), "length": f["length"]})
                 self.total_length += f["length"]
         else:
-            self.filenames.append({"path": root, "length": self.contents['info']['length']})
+            self.filenames.append({"path": root, "relpath": name, "length": self.contents['info']['length']})
             self.total_length = self.contents['info']['length']
 
     def get_trackers(self):
         if 'announce-list' in self.contents:
             return self.contents['announce-list']
-        else:
-            return [[self.contents['announce']]]
+        return [[self.contents.get('announce', '')]]
 
     def generate_peer_id(self):
         seed = str(time.time())

@@ -1,3 +1,4 @@
+import pytest
 import academictorrents as at
 import unittest
 import shutil
@@ -60,10 +61,12 @@ class UtilsTestSuite(unittest.TestCase):
         ret = utils.timestamp_is_within_30_days(int(datetime.datetime.timestamp(datetime.datetime.now())) - 86400 * 60)
         self.assertFalse(ret)
 
+    @pytest.mark.network
     def test_filename_checker(self):
         torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="./tests/")
         self.assertFalse(utils.filenames_present(torrent))
 
+    @pytest.mark.network
     def test_filename_checker_true(self):
         torrent = Torrent.Torrent(hash="55a8925a8d546b9ca47d309ab438b91f7959e77f", datastore="~/.academictorrents-datastore/")
         self.assertTrue(utils.filenames_present(torrent))
@@ -98,6 +101,7 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertNotIn("mozilla", utils.USER_AGENT.lower())
         self.assertNotIn("urllib", utils.USER_AGENT.lower())
 
+    @pytest.mark.network
     def test_torrent_download_not_rejected(self):
         import requests
         resp = requests.get("https://academictorrents.com/download/55a8925a8d546b9ca47d309ab438b91f7959e77f",
@@ -106,6 +110,7 @@ class UtilsTestSuite(unittest.TestCase):
         self.assertTrue(resp.content.startswith(b"d"))  # bencoded dict, not an error page
 
     # Test with different datastore
+    @pytest.mark.network
     def test_different_datastore(self):
         filename = at.get('323a0048d87ca79b68f12a6350a57776b6a3b7fb', datastore='~/.academictorrent-datastore/alt/', use_timestamp=False)
         assert filename == os.path.expanduser('~/.academictorrent-datastore/alt/mnist.pkl.gz')
