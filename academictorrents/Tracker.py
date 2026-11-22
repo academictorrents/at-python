@@ -9,7 +9,6 @@ import datetime
 import time
 from threading import Thread
 from . import utils
-from .version import __version__
 # Python 2 and 3: alternative 4
 try:
     from urllib.parse import urlparse
@@ -85,7 +84,7 @@ class Tracker(Thread):
             'port': 6881
         }
         try:
-            answerTracker = requests.get(tracker, params=params, timeout=30, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+            answerTracker = requests.get(tracker, params=params, timeout=30, headers=utils.HEADERS)
             lstPeers = bencode.decode(answerTracker.content)
             for peer in lstPeers['peers']:
                 self.new_peers_queue.put([peer['ip'], peer['port']])
@@ -110,7 +109,7 @@ class Tracker(Thread):
                     'port': 6881
                 }
                 try:
-                    resp = requests.post(tracker[0], params=params, timeout=30, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.post(tracker[0], params=params, timeout=30, headers=utils.HEADERS)
                 except Exception as e:
                     pass
             return params, resp
@@ -135,7 +134,7 @@ class Tracker(Thread):
                     'port': 6881
                 }
                 try:
-                    resp = requests.get(tracker[0], params=params, timeout=30, headers={'user-agent': "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()})
+                    resp = requests.get(tracker[0], params=params, timeout=30, headers=utils.HEADERS)
                 except Exception as e:
                     logging.info(e)
                     pass

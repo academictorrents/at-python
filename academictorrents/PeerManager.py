@@ -166,20 +166,24 @@ class PeerManager(Thread):
                         i += 1
                         break
 
-def grouper(pieces):
-    resp = []
-    length = 0
-    temp_pieces = []
-    for piece in pieces:
-        temp_pieces.append(piece)
-        if length > 5000000:
-            resp.append(temp_pieces)
-            temp_pieces = []
-        length += piece.size
-    resp.append(temp_pieces)
+def grouper(pieces, max_bytes=5000000):
+    """Split pieces into runs that can each be fetched with one HTTP Range request.
 
-    # now we have a list of piece lists
-    for idx, pieces in enumerate(resp):
-        resp[idx] = [piece for piece in pieces if piece]
-    resp = resp if resp[0] else []
+    A run must be contiguous: HttpPeer.request_ranges fetches one byte range and
+    slices it sequentially, so a gap (a piece already on disk) would shift every
+    following piece's data and make it fail its hash check forever.
+    """
+    resp = []
+    group = []
+    length = 0
+    for piece in sorted((p for p in pieces if p), key=lambda p: p.index):
+        contiguous = not group or piece.index == group[-1].index + 1
+        if group and (not contiguous or length >= max_bytes):
+            resp.append(group)
+            group = []
+            length = 0
+        group.append(piece)
+        length += piece.size
+    if group:
+        resp.append(group)
     return resp

@@ -1,5 +1,5 @@
 from . import Piece
-import bitstring
+from .utils import Bitfield
 import time
 import math
 from pubsub import pub
@@ -10,7 +10,7 @@ class PieceManager(object):
     def __init__(self, torrent):
         self.torrent = torrent
         self.number_of_pieces = torrent.number_of_pieces
-        self.bitfield = bitstring.BitArray(self.number_of_pieces)
+        self.bitfield = Bitfield(self.number_of_pieces)
         self.pieces = self.generate_pieces()
         self.files = self.get_files()
         for f in self.files:
@@ -33,7 +33,7 @@ class PieceManager(object):
         self.files = None
 
     def finished(self):
-        if sum(self.bitfield) == self.number_of_pieces:
+        if self.bitfield.count() == self.number_of_pieces:
             return True
         return False
 
@@ -97,7 +97,7 @@ class PieceManager(object):
         print("Checking pieces on disk...")
         for i in tqdm(range(0, self.number_of_pieces)):
             self.bitfield[i] = self.pieces[i].isCompleteOnDisk()  # this should set all the finished bools on the finished pieces
-        print("Found " + str(sum(self.bitfield)) + " finished pieces out of " + str(len(self.bitfield)) + " total pieces.")
+        print("Found " + str(self.bitfield.count()) + " finished pieces out of " + str(len(self.bitfield)) + " total pieces.")
 
     def generate_pieces(self):
         pieces = []

@@ -43,10 +43,7 @@ class Torrent(object):
         self.filenames = []
 
         self.get_files()
-        if self.total_length % self.piece_length == 0:
-            self.number_of_pieces = self.total_length / self.piece_length
-        else:
-            self.number_of_pieces = int(self.total_length / self.piece_length) + 1
+        self.number_of_pieces = -(-self.total_length // self.piece_length)  # ceil, as int
 
         logging.debug(self.trackers)
         logging.debug(self.filenames)
@@ -71,7 +68,7 @@ class Torrent(object):
             if not url:
                 continue
             try:
-                resp = requests.head(url)
+                resp = requests.head(url, headers=utils.HEADERS, timeout=10)
                 if resp.headers.get('Accept-Ranges', False):
                     urls.append('/'.join(url.split('/')[0:-1]) + '/')
                     continue
@@ -84,7 +81,10 @@ class Torrent(object):
             else:
                 url = url + '/' + directory + '/'
 
-            resp = requests.head(url + filename)
+            try:
+                resp = requests.head(url + filename, headers=utils.HEADERS, timeout=10)
+            except Exception:
+                continue
             if resp.headers.get('Accept-Ranges', False):
                 urls.append(url)
         return urls
@@ -98,15 +98,18 @@ class Torrent(object):
         return
 
     def get_from_url(self):
-        contents = None
-        url = "http://academictorrents.com/download/" + self.hash
-        torrent_path = os.path.join(tempfile.gettempdir()+"/", self.hash + '.torrent')
-        response = urlopen(url, timeout=5).read()
-        open(torrent_path, 'wb').write(response)
-        try:
-            return open(torrent_path, 'rb').read()
-        except Exception:
-            return None
+        # Send the AT-Client user-agent: the default Python-urllib one gets a 403.
+        url = "https://academictorrents.com/download/" + self.hash
+        torrent_path = os.path.join(tempfile.gettempdir(), self.hash + '.torrent')
+        response = requests.get(url, timeout=30, headers=utils.HEADERS)
+        response.raise_for_status()
+        contents = response.content
+        bencode.decode(contents)  # don't cache an error page as a .torrent
+        tmp_path = torrent_path + ".part"
+        with open(tmp_path, 'wb') as f:
+            f.write(contents)
+        os.replace(tmp_path, torrent_path)
+        return contents
 
     def get_files(self):
         root = self.datastore + self.contents['info']['name']

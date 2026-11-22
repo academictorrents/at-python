@@ -4,6 +4,57 @@ import json
 import datetime
 import calendar
 import time
+import requests
+from .version import __version__
+
+# Identify as the AT client. Never include "Mozilla": we are not a browser, and
+# academictorrents.com rejects some generic library agents (e.g. Python-urllib).
+USER_AGENT = "AT-Client/" + __version__ + " " + requests.utils.default_user_agent()
+HEADERS = {'user-agent': USER_AGENT}
+
+
+class Bitfield(object):
+    """Fixed-size bit array, MSB-first like the BitTorrent wire format."""
+
+    def __init__(self, length=0, data=None):
+        if data is None:
+            data = bytes((length + 7) // 8)
+        self._bytes = bytearray(data)
+        self._length = length if length else len(self._bytes) * 8
+
+    @classmethod
+    def from_bytes(cls, data):
+        return cls(len(data) * 8, data)
+
+    def __len__(self):
+        return self._length
+
+    def __getitem__(self, index):
+        if not 0 <= index < self._length:
+            raise IndexError("bitfield index out of range")
+        return bool(self._bytes[index >> 3] & (0x80 >> (index & 7)))
+
+    def __setitem__(self, index, value):
+        if not 0 <= index < self._length:
+            raise IndexError("bitfield index out of range")
+        if value:
+            self._bytes[index >> 3] |= 0x80 >> (index & 7)
+        else:
+            self._bytes[index >> 3] &= ~(0x80 >> (index & 7)) & 0xFF
+
+    def __iter__(self):
+        return (self[i] for i in range(self._length))
+
+    def count(self):
+        """Number of set bits (fast, unlike sum())."""
+        full, rem = divmod(self._length, 8)
+        n = sum(bin(b).count("1") for b in self._bytes[:full])
+        if rem:
+            n += bin(self._bytes[full] & (0xFF << (8 - rem)) & 0xFF).count("1")
+        return n
+
+    def tobytes(self):
+        return bytes(self._bytes)
 
 
 def convert_bytes_to_decimal(headerBytes):

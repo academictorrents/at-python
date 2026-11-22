@@ -3,10 +3,9 @@ import time
 import socket
 import logging
 import struct
-import bitstring
-from bitstring import BitArray
 from pubsub import pub
 from . import utils
+from .utils import Bitfield
 
 
 class Peer(object):
@@ -42,7 +41,7 @@ class Peer(object):
         }
 
         self.number_of_pieces = torrent.number_of_pieces
-        self.bitfield = bitstring.BitArray(self.number_of_pieces)
+        self.bitfield = Bitfield(self.number_of_pieces)
 
     def send(self, msg):
         try:
@@ -139,7 +138,7 @@ class Peer(object):
         pub.sendMessage('RarestPiece.update_peers_bitfield', bitfield=self.bitfield, peer=self)
 
     def update_bitfield(self, payload):
-        self.bitfield = BitArray(bytes=payload)
+        self.bitfield = Bitfield.from_bytes(payload)
         logging.info('request')
         pub.sendMessage('RarestPiece.update_peers_bitfield', bitfield=self.bitfield, peer=self)
 

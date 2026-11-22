@@ -1,8 +1,10 @@
-bencode.py == 2.0.0
-bitstring == 3.1.5
-PyPubSub == 3.3.0
+bencode.py >= 2.0.0
+PyPubSub >= 4.0.0
 requests >= 2.19.0
-pytest == 3.2.5
-future == 0.16.0
-numpy
+urllib3
 tqdm
+
+# test-only
+pytest
+pytest-timeout
+numpy  # tests unpickle MNIST, which contains numpy arrays
