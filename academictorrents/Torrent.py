@@ -6,31 +6,52 @@ import requests
 import tempfile
 from urllib.parse import quote
 from . import utils
+from . import bencoding
 
 logger = logging.getLogger(__name__)
 
 
+def fetch_from_academictorrents(info_hash, cache_path):
+    """Download a .torrent by hash from academictorrents.com and cache it."""
+    # Send the AT-Client user-agent: the default Python-urllib one gets a 403.
+    response = requests.get("https://academictorrents.com/download/" + info_hash, timeout=30, headers=utils.HEADERS)
+    response.raise_for_status()
+    contents = response.content
+    bencoding.info_bytes(contents)  # don't cache an error page as a .torrent
+    tmp_path = cache_path + ".part"
+    with open(tmp_path, 'wb') as f:
+        f.write(contents)
+    os.replace(tmp_path, cache_path)
+    return contents
+
+
 class Torrent(object):
-    def __init__(self, hash, datastore):
-        self.hash = hash
+    def __init__(self, hash=None, datastore="", contents=None):
+        """Load a torrent by info hash (cache, then academictorrents.com) or from raw .torrent bytes."""
+        self.hash = hash.lower() if hash else None
         self.datastore = utils.get_datastore(datastore=datastore)
         if not os.path.isdir(self.datastore):
             os.makedirs(self.datastore)
-        contents = self.get_from_file()
-        if not contents:
-            contents = self.get_from_url()
+        if contents is None:
+            contents = self.get_from_file()
+            if not contents:
+                contents = self.get_from_url()
         if not contents:
             raise Exception("Could not find a torrent with this hash on the tracker or in the data directory:" + str(self.datastore))
+
+        # Hash the info dict exactly as it appears in the file.
+        info_raw = bencoding.info_bytes(contents)
+        self.info_hash = utils.sha1_hash(info_raw)
+        if self.hash and self.hash != self.info_hash.hex():
+            raise ValueError("torrent info hash %s does not match %s" % (self.info_hash.hex(), self.hash))
+        self.hash = self.info_hash.hex()
 
         self.contents = bencode.decode(contents)
         self.total_length = 0
         self.piece_length = self.contents['info']['piece length']
-        self.pieces = self.contents['info']['pieces']
-        if isinstance(self.pieces, str):  # bencode.py decodes valid utf-8 to str
-            self.pieces = self.pieces.encode('utf-8')
+        self.pieces = bencoding.decode(info_raw)[b'pieces']
         self.single_file = 'files' not in self.contents['info']
-
-        self.info_hash = utils.sha1_hash(bencode.encode(self.contents['info']))
+        self.private = self.contents['info'].get('private') == 1
         self.peer_id = self.generate_peer_id()
         self.trackers = self.get_trackers()
         self.filenames = []
@@ -121,18 +142,7 @@ class Torrent(object):
             return None
 
     def get_from_url(self):
-        # Send the AT-Client user-agent: the default Python-urllib one gets a 403.
-        url = "https://academictorrents.com/download/" + self.hash
-        torrent_path = self.torrent_cache_path()
-        response = requests.get(url, timeout=30, headers=utils.HEADERS)
-        response.raise_for_status()
-        contents = response.content
-        bencode.decode(contents)  # don't cache an error page as a .torrent
-        tmp_path = torrent_path + ".part"
-        with open(tmp_path, 'wb') as f:
-            f.write(contents)
-        os.replace(tmp_path, torrent_path)
-        return contents
+        return fetch_from_academictorrents(self.hash, self.torrent_cache_path())
 
     def get_files(self):
         name = self.contents['info']['name']
@@ -156,6 +166,13 @@ class Torrent(object):
         if 'announce-list' in self.contents:
             return self.contents['announce-list']
         return [[self.contents.get('announce', '')]]
+
+    def add_trackers(self, urls):
+        known = {u for tier in self.trackers for u in tier}
+        for url in urls:
+            if url and url not in known:
+                self.trackers.append([url])
+                known.add(url)
 
     def generate_peer_id(self):
         seed = str(time.time())

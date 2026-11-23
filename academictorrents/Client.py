@@ -8,6 +8,7 @@ from .PeerManager import PeerManager
 from .Tracker import Tracker
 from .HttpPeer import HttpPeer
 from .WebSeedManager import WebSeedManager
+from .DHT import DHTPeerFinder
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class DownloadStalled(Exception):
 
 
 class Client(object):
-    def __init__(self, torrent, downloaded_amount, piece_manager, stall_timeout=600):
+    def __init__(self, torrent, downloaded_amount, piece_manager, stall_timeout=600, dht=None):
         self.torrent = torrent
         self.downloaded_amount = downloaded_amount
         self.piece_manager = piece_manager
@@ -36,6 +37,8 @@ class Client(object):
         self.web_seed_managers = [WebSeedManager(self.request_queue, piece_manager, self.stop_event)
                                   for _ in range(len(self.http_peers) * WORKERS_PER_WEB_SEED)]
         self.threads = [self.tracker, self.peer_manager, self.peer_seeker] + self.web_seed_managers
+        if dht is not None and not torrent.private:  # private torrents must not use the DHT
+            self.threads.append(DHTPeerFinder(dht, torrent.info_hash, self.new_peers_queue, self.stop_event))
 
     def choose_seed(self, relpath):
         now = time.time()
