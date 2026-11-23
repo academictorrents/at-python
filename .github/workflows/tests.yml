@@ -2,8 +2,8 @@
 
 name: CI Test
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+# Runs only when code, tests or build config change; edits to scripts/, docs/,
+# README etc. don't trigger it.
 on:
   push:
     branches: [ master ]
@@ -11,12 +11,18 @@ on:
       - 'academictorrents/**'
       - 'tests/**'
       - 'setup.py'
-      - '.github/**'
+      - 'requirements.txt'
+      - 'pytest.ini'
+      - '.github/workflows/**'
   pull_request:
     branches: [ master ]
     paths:
       - 'academictorrents/**'
       - 'tests/**'
+      - 'setup.py'
+      - 'requirements.txt'
+      - 'pytest.ini'
+      - '.github/workflows/**'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
