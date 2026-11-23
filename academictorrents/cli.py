@@ -1,4 +1,3 @@
-import sys
 import argparse
 
 from .academictorrents import get
@@ -12,7 +11,7 @@ def main():
     parser.add_argument(
         "hash",
         type=str,
-        help="Hash of the torrent to download",
+        help="Info hash, magnet link, .torrent file path or .torrent URL to download",
     )
 
     parser.add_argument(
@@ -31,12 +30,20 @@ def main():
         help="Show logs",
     )
 
+    parser.add_argument(
+        "--no-dht",
+        default=False,
+        action="store_true",
+        help="Don't use the DHT to find peers",
+    )
+
     args = parser.parse_args()
 
     get(
         args.hash,
         datastore=args.datastore,
         showlogs=args.verbose,
+        dht=not args.no_dht,
     )
 
     print("Exiting...")

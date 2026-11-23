@@ -132,3 +132,110 @@ def random_bytes(n, seed):
         h = hashlib.sha256(h).digest()
         out += h
     return bytes(out[:n])
+
+
+class FakeMetadataPeer(object):
+    """TCP peer that serves a torrent's info dict over ut_metadata (BEP 9/10)."""
+
+    def __init__(self, info_raw, info_hash, corrupt=False):
+        import socket
+        self.info_raw = bytearray(info_raw)
+        if corrupt:
+            self.info_raw[-2] ^= 0xFF
+        self.info_hash = info_hash
+        self.sock = socket.socket()
+        self.sock.bind(('127.0.0.1', 0))
+        self.sock.listen(5)
+        self.connections = 0
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    @property
+    def addr(self):
+        return self.sock.getsockname()
+
+    def _serve(self):
+        while True:
+            try:
+                conn, _ = self.sock.accept()
+            except OSError:
+                return
+            self.connections += 1
+            threading.Thread(target=self._handle, args=(conn,), daemon=True).start()
+
+    def _handle(self, conn):
+        import struct
+        from academictorrents import bencoding
+        try:
+            conn.settimeout(10)
+            buf = b''
+            while len(buf) < 68:
+                buf += conn.recv(4096)
+            reserved = bytearray(8)
+            reserved[5] = 0x10
+            conn.sendall(b'\x13BitTorrent protocol' + bytes(reserved) + self.info_hash + b'S' * 20)
+            hs = bencoding.encode({'m': {'ut_metadata': 7}, 'metadata_size': len(self.info_raw)})
+            conn.sendall(struct.pack('!IBB', 2 + len(hs), 20, 0) + hs)
+            buf = buf[68:]
+            while True:
+                while len(buf) >= 4 and len(buf) >= 4 + struct.unpack('!I', buf[:4])[0]:
+                    n = struct.unpack('!I', buf[:4])[0]
+                    msg, buf = buf[4:4 + n], buf[4 + n:]
+                    if n >= 2 and msg[0] == 20 and msg[1] == 7:
+                        req = bencoding.decode(msg[2:])
+                        i = req[b'piece']
+                        chunk = bytes(self.info_raw[i * 16384:(i + 1) * 16384])
+                        body = bencoding.encode({'msg_type': 1, 'piece': i, 'total_size': len(self.info_raw)}) + chunk
+                        conn.sendall(struct.pack('!IBB', 2 + len(body), 20, 3) + body)
+                data = conn.recv(65536)
+                if not data:
+                    return
+                buf += data
+        except Exception:
+            pass
+        finally:
+            conn.close()
+
+    def close(self):
+        self.sock.close()
+
+
+class FakeDHTNode(object):
+    """UDP DHT node answering get_peers with fixed peers and/or nodes."""
+
+    def __init__(self, peers=(), nodes=()):
+        import socket
+        self.peers = list(peers)
+        self.nodes = list(nodes)  # [(node_id, (ip, port))]
+        self.node_id = os.urandom(20)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(('127.0.0.1', 0))
+        self.queries = 0
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    @property
+    def addr(self):
+        return self.sock.getsockname()
+
+    def _serve(self):
+        import socket
+        import struct
+        from academictorrents import bencoding
+        while True:
+            try:
+                data, addr = self.sock.recvfrom(65536)
+            except OSError:
+                return
+            msg = bencoding.decode(data)
+            if msg.get(b'y') != b'q':
+                continue
+            self.queries += 1
+            r = {b'id': self.node_id, b'token': b'tok'}
+            if self.peers:
+                r[b'values'] = [socket.inet_aton(ip) + struct.pack('!H', port) for ip, port in self.peers]
+            if self.nodes:
+                r[b'nodes'] = b''.join(nid + socket.inet_aton(ip) + struct.pack('!H', port)
+                                       for nid, (ip, port) in self.nodes)
+            self.sock.sendto(bencoding.encode({b't': msg[b't'], b'y': b'r', b'r': r}), addr)
+
+    def close(self):
+        self.sock.close()
