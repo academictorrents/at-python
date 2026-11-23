@@ -1,15 +1,6 @@
-# Academic Torrents Python API
-
-## !! Not currently maintained !!
-
-Issues reported with large files. Use https://aria2.github.io/ instead.
-
-## !! Not currently maintained !!
-
+# Academic Torrents Pure Python API
 
 ![Build Status](https://github.com/AcademicTorrents/at-python/actions/workflows/tests.yml/badge.svg)
-
-[![codecov](https://codecov.io/gh/AcademicTorrents/at-python/branch/master/graph/badge.svg)](https://codecov.io/gh/AcademicTorrents/at-python)
 
 This repository is an implementation of the BitTorrent protocol written in Python and downloadable as a `pip` module. You can download datasets from AcademicTorrents.com in two lines of code in any Python script:
 ```python
@@ -82,6 +73,7 @@ Getting setup to work on this client is pretty easy. First, install the source c
 git clone https://github.com/AcademicTorrents/at-python.git
 cd at-python
 pip install -r requirements.txt
+pip install -e .
 ```
 
 or more direct:
